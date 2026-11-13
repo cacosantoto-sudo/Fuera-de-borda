@@ -1,6 +1,6 @@
 {
-  "name": "Fuera de Borda – Scotto Mecánica Náutica",
-  "short_name": "Fuera de Borda",
+  "name": "Auxilio Fuera de Borda – Scotto Mecánica Náutica",
+  "short_name": "Auxilio",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

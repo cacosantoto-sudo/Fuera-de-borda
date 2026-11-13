@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Fuera de Borda">
+<meta name="apple-mobile-web-app-title" content="Auxilio">
 <link rel="apple-touch-icon" href="icono-180.png">
-<title>Fuera de Borda</title>
+<title>Auxilio Fuera de Borda</title>
 <meta name="theme-color" content="#1f72e6">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
@@ -410,7 +410,7 @@ Motor: ${[m.marca, m.modelo, (m.modelo||"").includes(m.tiempos||"-") ? "" : m.ti
 Horas de uso: ${Math.round(S.horas)}
 Lo que le toca:
 ${lista.map(t => "- "+t.nombre+" ("+estado(t).txt+")").join("\n")}
-(Pedido desde la app Fuera de Borda)`;
+(Pedido desde la app Auxilio Fuera de Borda)`;
 }
 
 /* ---------- Estadísticas anónimas ---------- */
@@ -501,7 +501,7 @@ function render(){
   $("#top").innerHTML = S.motor
     ? `<a class="motor" href="#motor"><small>Mi motor · ${esc(S.motor.tiempos)} · ${esc(S.motor.potencia)} HP</small><b>${esc(S.motor.marca)} ${esc(S.motor.modelo)}</b></a>
        <a class="ayuda-btn" href="#ayuda">${ICON_TEL}Pedir ayuda</a>`
-    : `<span class="motor"><small>${esc(TALLER.nombre)}</small><b>Bienvenido</b></span>`;
+    : `<span class="motor"><small>${esc(TALLER.nombre)}</small><b>Auxilio Fuera de Borda</b></span>`;
   const v = $("#view");
   v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : vInicio();
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
