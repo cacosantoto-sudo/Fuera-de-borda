@@ -104,7 +104,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--ink)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .seg{display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--ink);border-radius:12px;overflow:hidden}
-.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg input{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;margin:0}
 .seg label{padding:13px 10px;text-align:center;cursor:pointer;font-weight:700;background:var(--surface)}
 .seg input:checked+label{background:var(--ink);color:var(--bg)}
 .seg input:focus-visible+label{outline:4px solid var(--sos);outline-offset:-4px}
@@ -189,14 +189,41 @@ table.datos td:last-child{text-align:right;font-weight:700;padding-left:10px}
 .pend{color:var(--warn)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:12px 18px;border-radius:12px;z-index:20;font-weight:700;max-width:90%}
 @media (prefers-reduced-motion:no-preference){.view{animation:in .18s ease-out}@keyframes in{from{transform:translateY(6px)}to{transform:none}}}
+/* Instalar la app: banda arriba + hoja con pasos (iPhone o navegador sin instalación directa) */
+.inst{display:flex;align-items:center;gap:10px;margin:12px 0 0;padding:10px;border:2px solid var(--ok);border-radius:var(--r);background:var(--ok-soft)}
+.inst[hidden],.inst-hoja[hidden]{display:none}
+.inst .inst-si{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;border:0;border-radius:12px;background:var(--ok);color:var(--ok-ink);font-weight:700;font-size:1.1rem;min-height:56px;padding:10px 14px;cursor:pointer}
+.inst .inst-si svg{width:26px;height:26px;flex-shrink:0}
+.inst .inst-no{border:0;background:none;color:var(--muted);font-size:.95rem;min-height:56px;padding:0 6px;cursor:pointer;text-decoration:underline}
+.inst-hoja{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center}
+.inst-hoja .caja{box-sizing:border-box;background:var(--surface);color:var(--ink);width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));max-height:90vh;overflow:auto}
+.inst-hoja h2{margin:0 0 14px;font-size:1.35rem}
+.inst-hoja ol{margin:0 0 18px;padding:0;list-style:none;counter-reset:p}
+.inst-hoja li{counter-increment:p;min-width:0;display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);font-size:1.1rem}
+.inst-hoja li::before{content:counter(p);flex-shrink:0;width:36px;height:36px;border-radius:50%;background:var(--ok);color:var(--ok-ink);font-weight:700;display:grid;place-items:center}
+.inst-hoja .ico{display:inline-flex;vertical-align:middle;border:2px solid var(--ink);border-radius:8px;padding:2px 6px;margin:0 2px}
+.inst-hoja .ico svg{width:20px;height:20px}
+.inst-hoja li span{min-width:0;flex:1}
+.inst-hoja .flecha{margin:0 0 14px;color:var(--muted);font-size:1rem}
 </style>
 
 <div class="app">
+<div class="inst" id="inst" hidden>
+  <button class="inst-si" id="inst-si" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M12 7v7m-3-3l3 3 3-3"/><path d="M10 18h4"/></svg>Instalar la app</button>
+  <button class="inst-no" id="inst-no" type="button">Ahora no</button>
+</div>
   <header class="top" id="top"></header>
   <main id="view" class="view"></main>
 </div>
 <div class="tabs"><nav id="tabs"></nav></div>
 <div class="toast" id="toast" hidden></div>
+<div class="inst-hoja" id="inst-hoja" hidden role="dialog" aria-modal="true" aria-labelledby="inst-tit">
+  <div class="caja">
+    <h2 id="inst-tit">Instalar en 3 pasos</h2>
+    <div id="inst-pasos"></div>
+    <button class="btn" id="inst-ok" type="button" style="width:100%">Entendido</button>
+  </div>
+</div>
 
 <script src="datos-motores.js"></script>
 <script src="diagnosticos.js"></script>
@@ -706,4 +733,55 @@ contar("abrir/" + modoApp());
 try { if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(()=>{}); } catch(e){}
 })();
 </script>
+<script>
+/* Botón "Instalar la app". Android/Chrome: instala con un toque. iPhone y otros: muestra los pasos con dibujos. */
+(function(){
+  "use strict";
+  var KEY = "fdb-instalar-no";
+  var banda = document.getElementById("inst"), hoja = document.getElementById("inst-hoja"), pasos = document.getElementById("inst-pasos");
+  var aviso = null;
+  function guardar(k, v){ try { localStorage.setItem(k, v); } catch(e){} }
+  function leer(k){ try { return localStorage.getItem(k); } catch(e){ return null; } }
+  var instalada = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  var enMarco = false; try { enMarco = window.top !== window; } catch(e){ enMarco = true; }
+  if (instalada || enMarco || location.protocol !== "https:") return;
+  var ua = navigator.userAgent || "";
+  var ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var android = /Android/.test(ua);
+  var nuevoNo = Number(leer(KEY) || 0);
+  function mostrar(){ if (Date.now() - nuevoNo > 3*24*3600*1000) banda.hidden = false; }
+  var COMP = '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m-4 4l4-4 4 4"/><path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1"/></svg></span>';
+  var MAS = '<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8M8 12h8"/></svg></span>';
+  var PUNTOS = '<span class="ico"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></span>';
+  function abrirPasos(){
+    if (ios) {
+      pasos.innerHTML = (/CriOS|FxiOS|EdgiOS/.test(ua) ? '<p class="flecha">Si no ve estas opciones, abra este link en Safari.</p>' : '') +
+        '<ol><li><span>Toque el botón <b>Compartir</b> ' + COMP + ' (abajo, en el centro de la pantalla; o arriba en el iPad).</span></li>' +
+        '<li><span>Baje un poco y toque <b>Agregar a inicio</b> ' + MAS + '</span></li>' +
+        '<li><span>Toque <b>Agregar</b>, arriba a la derecha. Listo: la app queda en la pantalla del celular.</span></li></ol>';
+    } else {
+      pasos.innerHTML = '<ol><li><span>Toque los <b>tres puntos</b> ' + PUNTOS + ' arriba a la derecha (o el menú ☰ abajo).</span></li>' +
+        '<li><span>Toque <b>Instalar app</b> o <b>Agregar a pantalla principal</b>.</span></li>' +
+        '<li><span>Toque <b>Instalar</b> o <b>Agregar</b>. Listo: la app queda en la pantalla del celular.</span></li></ol>';
+    }
+    hoja.hidden = false;
+    document.getElementById("inst-ok").focus();
+  }
+  window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); aviso = e; mostrar(); });
+  window.addEventListener("appinstalled", function(){ banda.hidden = true; hoja.hidden = true; aviso = null; });
+  document.getElementById("inst-si").addEventListener("click", function(){
+    if (aviso) {
+      var a = aviso; aviso = null;
+      a.prompt();
+      a.userChoice.then(function(r){ if (r && r.outcome === "accepted") banda.hidden = true; }).catch(function(){});
+    } else abrirPasos();
+  });
+  document.getElementById("inst-no").addEventListener("click", function(){ banda.hidden = true; guardar(KEY, String(Date.now())); });
+  document.getElementById("inst-ok").addEventListener("click", function(){ hoja.hidden = true; });
+  hoja.addEventListener("click", function(e){ if (e.target === hoja) hoja.hidden = true; });
+  /* iPhone nunca avisa: se muestra siempre. Android: si en 3 s Chrome no ofreció instalar (otro navegador), se muestra con los pasos. */
+  if (ios) mostrar(); else if (android) setTimeout(function(){ mostrar(); }, 3000);
+})();
+</script>
+
 </html>
