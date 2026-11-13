@@ -1580,8 +1580,8 @@ window.DATOS.DIAGNOSTICOS_BASE = [
 /* Orden en que se muestran los grupos en la lista de síntomas */
 window.DATOS.GRUPOS_DIAGNOSTICO = [
   "Temperatura y alarmas",
+  "Arranque",            // Juan (13/11/2026): "No arranca" justo debajo de las 3 primeras, es la falla más común
   "Golpes y caídas al agua",
-  "Arranque",
   "En marcha",
   "Hélice y marchas",
   "Nafta y aceite",
