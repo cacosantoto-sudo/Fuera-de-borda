@@ -8,45 +8,51 @@
 <meta name="apple-mobile-web-app-title" content="Fuera de Borda">
 <link rel="apple-touch-icon" href="icono-180.png">
 <title>Fuera de Borda</title>
-<meta name="theme-color" content="#e2571b">
+<meta name="theme-color" content="#1f72e6">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icono.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shrikhand&family=Rubik:ital,wght@0,400;0,500;0,700;0,800;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:ital,wght@1,700;1,800;1,900&family=Barlow:ital,wght@0,400;0,500;0,700;1,400;1,800&display=swap">
 <style>
-/* ESTILO "CATÁLOGO DE LOS 70" (elegido por Juan, 13/11/2026): franjas naranja, mostaza y marrón,
-   títulos en Shrikhand, texto en Rubik, botones y campos redondeados tipo píldora.
-   MODO EMERGENCIA. Pensado para alguien en el agua, nervioso y sin saber mecánica:
-   letra grande de alto contraste (se lee a pleno sol), un paso por pantalla, botones grandes abajo,
-   naranja de supervivencia SOLO para emergencia y verde para "funcionó".
-   Todos los colores y la letra salen de estas variables. */
+/* ESTILO "CAMIÓN AZUL DE LOS 90" (vista previa 13/11/2026, según foto que mandó Juan): cabina azul, franjas roja, blanca y violeta, chapas negras con letra blanca y cromados; títulos Saira itálica, texto Barlow.
+   MODO EMERGENCIA: letra grande, un paso por pantalla, botones grandes abajo,
+   naranja/rojo SOLO para emergencia y verde para "funcionó". Todos los colores salen de estas variables. */
 :root{
-  --bg:#fdfbf6; --surface:#ffffff; --soft:#f6eddc; --line:#dcc8a8;
-  --ink:#3a2412; --muted:#6b4f37;
-  --sos:#e2571b; --sos-ink:#ffffff; --sos-soft:#fde2d2;
-  --ok:#3d7a2a; --ok-ink:#ffffff; --ok-soft:#e3efd6;
-  --warn:#9a5c00; --warn-soft:#fdf0cf;
-  --mostaza:#f0a81c; --marron:#8a4b1c;
-  --franjas:linear-gradient(#e2571b 0 33.3%,#f0a81c 33.3% 66.6%,#8a4b1c 66.6%);
-  --font:"Rubik",Verdana,system-ui,sans-serif;
-  --display:"Shrikhand","Rubik",Georgia,serif;
-  --r:14px;
+  --bg:#ffffff; --surface:#ffffff; --soft:#e7f0fc; --line:#a9c4ea;
+  --ink:#0d1b33; --muted:#3d4f6b;
+  --sos:#ff5a10; --sos-ink:#ffffff; --sos-soft:#ffe1d4;
+  --ok:#1f8a3a; --ok-ink:#ffffff; --ok-soft:#dcf2e0;
+  --warn:#8a5a00; --warn-soft:#fff3c4;
+  --azul:#1667d9; --cabina:#1f72e6; --rojo:#e3174c; --violeta:#5b3a9e; --placa:#14161a;
+  --cromo:linear-gradient(#ffffff,#c9d3dc 45%,#8e9aa6 55%,#e8edf2);
+  --raya:linear-gradient(transparent 0 20%,#e3174c 20% 40%,#ffffff 40% 60%,#5b3a9e 60% 80%,transparent 80%);
+  --font:"Barlow",Verdana,system-ui,sans-serif;
+  --display:"Saira","Barlow",Arial,sans-serif;
+  --r:0px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#22160c; --surface:#2e1e11; --soft:#3a2716; --line:#5c4128;
-  --ink:#fbefdc; --muted:#d6bfa0;
-  --sos:#f26a2c; --sos-ink:#ffffff; --sos-soft:#4a2210;
-  --ok:#5ea343; --ok-ink:#ffffff; --ok-soft:#203316;
-  --warn:#f0b43a; --warn-soft:#3d2c0c;
-  --mostaza:#f0a81c; --marron:#b8682b;
+  --bg:#08111f; --surface:#101c30; --soft:#16264a; --line:#2c4470;
+  --ink:#eef4ff; --muted:#b4c4e0;
+  --sos:#ff6a33; --sos-ink:#ffffff; --sos-soft:#4a1a0c;
+  --ok:#3fbf63; --ok-ink:#06200e; --ok-soft:#10301a;
+  --warn:#ffd24a; --warn-soft:#3d3010;
+  --azul:#5b9bff; --cabina:#1a5fc4; --rojo:#ff3d6b; --violeta:#9a7bff; --placa:#000000;
+  --cromo:linear-gradient(#5a6672,#2a333c 50%,#46525e);
+  --raya:linear-gradient(transparent 0 20%,#ff3d6b 20% 40%,#ffffff 40% 60%,#9a7bff 60% 80%,transparent 80%);
+  --font:"Barlow",Verdana,system-ui,sans-serif;
+  --display:"Saira","Barlow",Arial,sans-serif;
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#22160c; --surface:#2e1e11; --soft:#3a2716; --line:#5c4128;
-  --ink:#fbefdc; --muted:#d6bfa0;
-  --sos:#f26a2c; --sos-ink:#ffffff; --sos-soft:#4a2210;
-  --ok:#5ea343; --ok-ink:#ffffff; --ok-soft:#203316;
-  --warn:#f0b43a; --warn-soft:#3d2c0c;
-  --mostaza:#f0a81c; --marron:#b8682b;
+  --bg:#08111f; --surface:#101c30; --soft:#16264a; --line:#2c4470;
+  --ink:#eef4ff; --muted:#b4c4e0;
+  --sos:#ff6a33; --sos-ink:#ffffff; --sos-soft:#4a1a0c;
+  --ok:#3fbf63; --ok-ink:#06200e; --ok-soft:#10301a;
+  --warn:#ffd24a; --warn-soft:#3d3010;
+  --azul:#5b9bff; --cabina:#1a5fc4; --rojo:#ff3d6b; --violeta:#9a7bff; --placa:#000000;
+  --cromo:linear-gradient(#5a6672,#2a333c 50%,#46525e);
+  --raya:linear-gradient(transparent 0 20%,#ff3d6b 20% 40%,#ffffff 40% 60%,#9a7bff 60% 80%,transparent 80%);
+  --font:"Barlow",Verdana,system-ui,sans-serif;
+  --display:"Saira","Barlow",Arial,sans-serif;
   color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:18px;line-height:1.4;
@@ -213,63 +219,81 @@ table.datos td:last-child{text-align:right;font-weight:700;padding-left:10px}
 .inst-hoja li span{min-width:0;flex:1}
 .inst-hoja .flecha{margin:0 0 14px;color:var(--muted);font-size:1rem}
 
-/* ---------- Estilo catálogo de los 70 (sobrescribe lo anterior) ---------- */
-h1,h2{font-family:var(--display);font-weight:400;letter-spacing:.005em;line-height:1.05}
-h1{color:var(--sos)}
-h3{font-weight:800}
-.top{border-bottom:0;padding-bottom:20px}
-.top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:12px;background:var(--franjas)}
-.top .motor b{font-family:var(--display);font-weight:400;font-size:1.1rem}
-.ayuda-btn{border-radius:999px;background:var(--sos);color:var(--sos-ink);box-shadow:0 4px 0 var(--marron)}
-.tabs{border-top:0;box-shadow:0 -10px 0 0 var(--surface)}
-.tabs::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px;background:var(--franjas)}
-.tabs a[aria-current="page"]{color:var(--ink)}
+/* ---------- Estilo camión azul de los 90 (sobrescribe lo anterior) ---------- */
+h1,h2{font-family:var(--display);font-weight:900;font-style:italic;text-transform:uppercase;letter-spacing:-.01em;line-height:1}
+h1{font-size:1.75rem}
+h3{font-weight:700}
+.top{border-bottom:0;padding-bottom:22px}
+.top::after{content:"";position:absolute;left:-16px;right:-16px;bottom:0;height:14px;background:var(--raya);clip-path:polygon(0 0,100% 0,100% 100%,22% 100%)}
+.top .motor b{font-family:var(--display);font-weight:800;font-style:italic;text-transform:uppercase;font-size:1.1rem}
+.ayuda-btn{background:var(--sos);color:var(--sos-ink);border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);padding-inline:20px}
+.tabs{border-top:0}
+.tabs::before{content:"";position:absolute;left:0;right:0;top:-10px;height:10px;background:var(--raya)}
+.tabs a[aria-current="page"]{color:var(--azul)}
 .tabs a[aria-current="page"]::before{display:none}
-.tabs a[aria-current="page"] svg{background:var(--mostaza);color:#3a2412;border-radius:999px;padding:3px 14px;width:56px;box-sizing:content-box;height:24px}
-.btn{border-radius:999px;box-shadow:0 5px 0 var(--marron);font-weight:800}
-.btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--marron)}
-.btn.sec{border:3px solid var(--ink);background:var(--surface)}
-.btn.ghost{border:3px solid var(--ink);box-shadow:none}
-.btn.big{font-family:var(--display);font-weight:400;font-size:1.5rem}
-.volver,.link{border-radius:999px}
-.volver{border-width:3px}
-.panel,.tarea,.notice.info{border:3px solid var(--ink);border-radius:22px}
-.tarea .det{border-top:3px dashed var(--line)}
-.chip{border:2px solid currentColor}
-.field label{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--marron)}
-.field input,.field select,.field textarea{border:3px solid var(--ink);border-radius:999px;padding:12px 18px;font-size:1.1rem}
-.field textarea{border-radius:18px}
+.btn{border-radius:0;clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%);font-weight:800;font-style:italic;text-transform:uppercase;letter-spacing:.02em;padding-inline:28px}
+.btn.sec,.btn.ghost{background:var(--soft);border:0;box-shadow:inset 0 -5px 0 var(--ink)}
+.btn.big{font-family:var(--display);font-weight:900;font-size:1.4rem}
+.volver{border-radius:0;border-width:3px;font-style:italic}
+.panel,.tarea,.notice.info{border:0;border-left:8px solid var(--azul);border-radius:0;background:var(--soft)}
+.tarea .det{border-top:2px solid var(--line)}
+.field label{font-family:var(--display);font-weight:800;font-style:italic;text-transform:uppercase;font-size:.85rem;color:var(--azul)}
+.field input,.field select,.field textarea{border:0;border-bottom:4px solid var(--ink);border-radius:0;background:var(--surface);font-size:1.1rem}
 .seg{border:0;gap:10px;overflow:visible}
-.seg label{border:3px solid var(--ink);border-radius:999px;font-family:var(--display);font-weight:400;font-size:1.2rem}
-.seg input:checked+label{background:var(--mostaza);color:#3a2412}
-.seg label,.field .seg label{text-transform:none;letter-spacing:0;color:var(--ink);font-size:1.1rem}
-.seg input:checked+label{color:#3a2412}
-.sos-card{border-radius:28px;box-shadow:0 7px 0 var(--marron);overflow:hidden;padding-top:84px;padding-bottom:40px;min-height:250px}
-.sos-card::after{content:"";position:absolute;left:0;right:0;bottom:0;height:22px;background:linear-gradient(#f0a81c 0 50%,#8a4b1c 50%)}
-.sos-card b{font-family:var(--display);font-weight:400;font-size:2.2rem}
-.accesos a{border:3px solid var(--ink);border-radius:22px}
-.accesos a{font-family:var(--display);font-weight:400;font-size:1.35rem}
-.accesos a small{font-family:var(--font)}
-.consejo{border-radius:22px;background:var(--soft)}
-.consejo i{background:var(--mostaza);color:#3a2412}
-.seguro{border-radius:22px}
-.sintoma{border:3px solid var(--ink);border-radius:22px}
-.sintoma.urgente{box-shadow:inset 0 0 0 1px var(--sos)}
-.sintoma .apague{border-radius:999px;padding:1px 10px}
-.ladder span.done,.ladder span.now{background:var(--sos)}
-.ladder span.now{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--sos)}
-.bien,.stop{border-radius:22px}
-.stop{box-shadow:0 7px 0 var(--marron)}
-.stop .eyebrow{color:var(--sos-ink)}
-.llamar{border:3px solid var(--ink);border-radius:22px}
-.llamar span.accion{border-radius:999px;background:var(--sos);color:var(--sos-ink)}
-details.tecnico{border-radius:22px}
-.sumario div{border:3px solid var(--ink);border-radius:22px}
-.sumario b{font-family:var(--display);font-weight:400}
-.toast{border-radius:999px}
-.inst{border:3px solid var(--ok);border-radius:22px}
-.inst .inst-si{border-radius:999px;box-shadow:0 4px 0 #24521a}
-.inst-hoja .caja{border-radius:26px 26px 0 0}
+.seg label{border:0;border-radius:0;background:var(--surface);box-shadow:inset 0 0 0 3px var(--ink);clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%);font-weight:800;font-style:italic;font-size:1.1rem}
+.seg input:checked+label{background:var(--azul);color:#fff;box-shadow:none}
+.sos-card{border-radius:0;overflow:hidden;padding-top:84px;min-height:250px;clip-path:polygon(0 0,100% 0,100% calc(100% - 26px),calc(100% - 26px) 100%,0 100%)}
+.sos-card::after{content:"";position:absolute;left:0;right:0;top:34px;height:46px;background:linear-gradient(#e3174c 0 30%,#fff 30% 62%,#5b3a9e 62%);clip-path:polygon(30% 0,100% 0,100% 100%,40% 100%);opacity:.95}
+.sos-card b{font-family:var(--display);font-weight:900;font-style:italic;text-transform:uppercase;font-size:2.1rem;position:relative;z-index:1}
+.sos-card span{position:relative;z-index:1}
+.accesos a{border:0;border-radius:0;background:var(--soft);border-bottom:6px solid var(--azul);font-family:var(--display);font-weight:800;font-style:italic;text-transform:uppercase;font-size:1.2rem;position:relative;overflow:hidden}
+.accesos a::after{content:"";position:absolute;top:12px;right:-6px;width:60%;height:24px;background:var(--raya);clip-path:polygon(18% 0,100% 0,100% 100%,0 100%)}
+.accesos a small{font-family:var(--font);font-style:normal;text-transform:none;font-weight:500}
+.consejo{border-radius:0;background:var(--soft);border-left:8px solid var(--amarillo)}
+.consejo i{background:var(--amarillo);color:#111318}
+.seguro{border-radius:0}
+.sintoma{border:0;border-radius:0;background:var(--soft);border-bottom:5px solid var(--ink)}
+.sintoma b{font-weight:700}
+.sintoma.urgente{border-bottom-color:var(--sos);box-shadow:none}
+.sintoma .apague{border-radius:0;font-style:italic}
+.ladder span{border-radius:0!important}
+.ladder span.done,.ladder span.now{background:var(--azul)}
+.ladder span.now{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--azul)}
+.bien,.stop{border-radius:0}
+.stop{clip-path:polygon(0 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%)}
+.llamar{border:0;border-radius:0;background:var(--soft);border-left:8px solid var(--sos)}
+.llamar span.accion{border-radius:0;background:var(--sos);color:#fff;font-style:italic;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);padding-inline:18px}
+details.tecnico{border-radius:0}
+.sumario div{border:0;border-radius:0;background:var(--soft);border-bottom:5px solid var(--azul)}
+.sumario b{font-family:var(--display);font-style:italic;font-weight:900}
+.toast{border-radius:0}
+.inst{border:0;border-left:8px solid var(--ok);border-radius:0}
+.inst .inst-si{border-radius:0;clip-path:polygon(10px 0,100% 0,calc(100% - 10px) 100%,0 100%)}
+.inst-hoja .caja{border-radius:0}
+.top{background:var(--cabina);color:#fff;box-shadow:0 0 0 100vmax var(--cabina);clip-path:inset(0 -100vmax)}
+.top .motor small{color:#dbe8ff}
+body::before{background:var(--cabina)}
+.top::after{height:16px;bottom:4px}
+.tabs{background:var(--surface)}
+.tabs::before{background:var(--raya),var(--cabina);height:16px;top:-16px}
+.tabs a[aria-current="page"]{color:var(--azul)}
+.tabs a[aria-current="page"] svg{background:var(--placa);color:#fff;padding:3px 14px;width:56px;box-sizing:content-box;height:24px}
+h1{color:var(--azul)}
+/* chapas negras con letra blanca, como el "13H" de la cabina */
+.eyebrow{display:inline-block;align-self:flex-start;background:var(--placa);color:#fff;padding:2px 8px;font-family:var(--display);font-style:normal;letter-spacing:.04em}
+.stop .eyebrow{color:#fff}
+.accesos a{background:var(--cabina);color:#fff;border-bottom:0;box-shadow:inset 0 -6px 0 var(--placa)}
+.accesos a small{color:#dbe8ff}
+.accesos a::after{top:16px;right:0;width:70%;height:16px;clip-path:polygon(8% 0,100% 0,100% 100%,0 100%)}
+.panel,.tarea,.notice.info{border-left-color:var(--cabina)}
+.field label{color:var(--azul)}
+.seg input:checked+label{background:var(--cabina);color:#fff}
+.ladder span.done,.ladder span.now{background:var(--cabina)}
+.ladder span.now{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--cabina)}
+.consejo{border-left-color:var(--rojo)}
+.consejo i{background:var(--placa);color:#fff}
+.sumario div{border-bottom-color:var(--rojo)}
+.btn.sec,.btn.ghost{background:var(--cromo);color:#0d1b33}
 </style>
 
 <div class="app">
