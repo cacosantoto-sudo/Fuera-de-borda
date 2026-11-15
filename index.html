@@ -294,6 +294,8 @@ h1{color:var(--azul)}
 .consejo i{background:var(--placa);color:#fff}
 .sumario div{border-bottom-color:var(--rojo)}
 .btn.sec,.btn.ghost{background:var(--cromo);color:#0d1b33}
+.seguro-chico{margin:0;font-size:.85rem;line-height:1.35;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px}
+.seguro-chico a{color:inherit;font-weight:700}
 </style>
 
 <div class="app">
@@ -531,6 +533,10 @@ function bloqueSeguro(titulo){
   return `<section class="seguro"><h2>${esc(titulo || (av && av.titulo) || "¿Está en el agua y con problemas?")}</h2>
     <ol class="pasos-num">${pasos.map(p=>`<li>${esc(p)}</li>`).join("")}</ol></section>`;
 }
+/* Aviso de seguridad chico para la lista de problemas (Juan, 15/11/2026: que no le quite lugar al diagnóstico) */
+function avisoChico(){
+  return `<p class="seguro-chico">Seguridad: chaleco puesto · ancla si va a la deriva · Prefectura <a href="tel:${PREFECTURA.tel}">${PREFECTURA.tel}</a></p>`;
+}
 function llamadas(){
   const taller = TALLER.tel
     ? `<a class="llamar" href="tel:${esc(TALLER.tel)}"><span><small>${esc(TALLER.nombre)}</small><b>${esc(TALLER.ver || TALLER.tel)}</b></span><span class="accion">Llamar</span></a>`
@@ -555,7 +561,7 @@ function vDiag(){
     return `<div class="stack">
       <h1>¿Qué le pasa al motor?</h1>
       <p class="muted">Toque lo que le pasa. Le decimos qué hacer, paso a paso.</p>
-      ${bloqueSeguro()}
+      ${avisoChico()}
       ${gruposDiag().map(([g, ds]) => `
       ${g ? `<div class="section-title"><h2>${esc(g)}</h2></div>` : ""}
       <div class="mosaico">${ds.map(d => `
