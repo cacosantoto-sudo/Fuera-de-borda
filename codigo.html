@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Códigos de activación</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap">
+<style>
+:root{--ink:#0c2a3e;--muted:#4f6b7d;--mar:#0a6fae;--line:#cfe3ef}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,#dff1fb,#f6fbfe 60%);min-height:100vh}
+main{max-width:520px;margin:0 auto;padding:24px 16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:0 10px 30px rgba(10,60,100,.08);display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font-size:1.6rem}
+p{margin:0;line-height:1.5}
+.muted{color:var(--muted)}
+label{font-weight:600}
+input{font:600 1.4rem Inter,sans-serif;padding:12px;border:1px solid var(--line);border-radius:14px;width:100%;letter-spacing:.05em}
+.cod{font-size:2.4rem;font-weight:800;letter-spacing:.15em;text-align:center;background:#eaf6fd;border-radius:16px;padding:14px}
+.btn{border:0;border-radius:16px;padding:14px 18px;font:700 1rem Inter,sans-serif;cursor:pointer;background:var(--mar);color:#fff}
+</style>
+</head>
+<body>
+<main><div class="card">
+  <h1>Códigos de activación</h1>
+  <p class="muted">Solo para Juan. Cuando un cliente manda el comprobante de pago con su número de pedido, escríbalo acá y respóndale con el código.</p>
+  <label for="ped">Número de pedido del cliente</label>
+  <input id="ped" inputmode="numeric" placeholder="Ej.: 4821-7735" autocomplete="off">
+  <div class="cod" id="cod">——————</div>
+  <p class="muted" id="msj"></p>
+  <button class="btn" id="cop">Copiar mensaje para el cliente</button>
+</div></main>
+<script src="cobros.js"></script>
+<script>
+(function(){
+  var ped = document.getElementById("ped"), cod = document.getElementById("cod"), msj = document.getElementById("msj"), texto = "";
+  function act(){
+    var n = ped.value.replace(/\D/g, "");
+    if (n.length !== 8){ cod.textContent = "——————"; msj.textContent = "El número de pedido tiene 8 números."; texto = ""; return; }
+    var c = COBROS.codigo(n, "sp"); cod.textContent = c;
+    texto = "¡Gracias por su compra! Su código para activar \"Haga el service usted mismo\" es: " + c + "\nEn la app, toque Service > Haga el service usted mismo > \"Ya tengo mi código\" y escríbalo.";
+    msj.textContent = texto;
+  }
+  ped.addEventListener("input", act); act();
+  document.getElementById("cop").addEventListener("click", function(){ if (texto && navigator.clipboard) navigator.clipboard.writeText(texto).then(function(){ document.getElementById("cop").textContent = "Copiado"; setTimeout(function(){ document.getElementById("cop").textContent = "Copiar mensaje para el cliente"; }, 1500); }); });
+})();
+</script>
+</body>
+</html>

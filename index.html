@@ -320,6 +320,14 @@ a.volver{text-decoration:none;color:var(--ink)}
 .instalada-ok{margin:0;font-size:.9rem;color:var(--ok);font-weight:600;text-align:center}
 .sp-cartel{align-items:center;text-align:center}
 .sp-cartel ol{text-align:left}
+/* Compra de la guía (15/11/2026) */
+.precio-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:18px;border-radius:24px;background:linear-gradient(160deg,#1592d6,#0a6fae);color:#fff;box-shadow:0 12px 26px rgba(10,111,174,.28)}
+.precio-card small{font-size:.95rem;opacity:.9}
+.precio-card b{font-size:2.6rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.precio-card span{font-size:1rem;opacity:.9}
+.pedido{margin:0;font-size:1.05rem}
+.pedido b{font-variant-numeric:tabular-nums;letter-spacing:.04em}
+.codigo-in{font-size:1.4rem;letter-spacing:.12em;text-transform:uppercase}
 /* Talleres adheridos (15/11/2026) */
 .logo-t{width:44px;height:44px;border-radius:12px;flex:none;object-fit:cover;display:inline-flex;align-items:center;justify-content:center}
 .logo-t.ini{background:linear-gradient(160deg,#1592d6,#0a6fae);color:#fff;font-style:normal;font-weight:800;font-size:1rem;letter-spacing:.02em}
@@ -365,6 +373,7 @@ a.volver{text-decoration:none;color:var(--ink)}
 <script src="diagnosticos.js"></script>
 <script src="identificar-anio.js"></script>
 <script src="talleres.js"></script>
+<script src="cobros.js"></script>
 <script src="service-propio.js"></script>
 <script>
 (function(){
@@ -767,7 +776,7 @@ function vMant(){
       <p class="muted" style="font-size:.92rem">${pend.length === 1 ? "Hay 1 tarea vencida o próxima" : "Hay "+pend.length+" tareas vencidas o próximas"}. Pida turno y llévelo al taller antes de la próxima salida.</p>
       ${aTurno(pend, "turno/todo", "Pedir turno por WhatsApp")}</div>` : ""; })()}
     <div class="sp-entrada">
-      ${spVisible() ? `<a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>Guía paso a paso para su motor</small></a>` : ""}
+      ${spVisible() ? `<a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>${spBloqueado() ? "Guía paso a paso para su motor · " + pesos(CB.servicePropio.precio) : "Guía paso a paso para su motor"}</small></a>` : ""}
       ${(() => { const t = taller(); return t && t.repuestos === false ? "" : `<a class="sp-btn sec" href="#repuestos"><b>${repuestosAlTaller() ? "Comprar los repuestos" : "Lista de repuestos"}</b><small>La lista de lo que lleva su motor</small></a>`; })()}
       <a class="sp-btn sec" href="#cargar-service"><b>Me lo hizo el taller</b><small>Anote el service en 3 toques</small></a>
     </div>
@@ -848,7 +857,51 @@ function datosBox(item, compacto){
     <dl>${filas.map(([n,v]) => `<div><dt>${esc(n)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></div>`;
 }
 const NIVEL_SP = { facil:["simple","Fácil"], medio:["intermedio","Con herramientas"], riesgo:["mecanico","La más arriesgada"] };
+/* ---------- Cobro de "Haga el service usted mismo" (Juan, 15/11/2026) ---------- */
+// Se prende en cobros.js (servicePropio.activo). Se paga una vez; el código de activación sale del número de pedido.
+const CB = window.COBROS || { servicePropio: { activo:false } };
+function numeroPedido(){
+  if (!S.pedido){ let n = ""; for (let i = 0; i < 8; i++) n += Math.floor(Math.random() * 10); if (n[0] === "0") n = "1" + n.slice(1); S.pedido = n; save(); }
+  return S.pedido.slice(0,4) + "-" + S.pedido.slice(4);
+}
+function spPagado(){ return !!(S.compras && S.compras.sp && CB.codigo && S.compras.sp === CB.codigo(S.pedido, "sp")); }
+function spBloqueado(){ return !!(CB.servicePropio && CB.servicePropio.activo) && !spPagado(); }
+const pesos = n => "$" + Number(n).toLocaleString("es-AR");
+function vComprar(){
+  const c = CB.servicePropio, ped = numeroPedido(), ws = c.whatsapp || (TT.contacto || {}).whatsapp || "";
+  const nombres = spItems().filter(i => i.tarea).map(i => i.titulo).filter(Boolean);
+  const txtCompra = `Hola, quiero comprar la guía "Haga el service usted mismo" de la app Auxilio Fuera de Borda.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}\nPrecio: ${pesos(c.precio)}. ¿Cómo hago el pago?`;
+  const txtComprobante = `Hola, ya pagué la guía "Haga el service usted mismo". Le mando el comprobante.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}`;
+  return `<div class="stack">
+    <a class="volver" href="#mantenimiento">‹ Service</a>
+    <span class="eyebrow">Haga el service usted mismo</span>
+    <h1>Por lo que cuesta un service, aprenda a hacerlo usted</h1>
+    <p>Por aproximadamente el costo de un service de taller, se lleva la guía completa para su ${esc(motorLinea())}: todo lo que necesita saber para hacerlo con sus propias manos, esta vez y todas las que vengan.</p>
+    <div class="panel stack"><h3>Qué incluye</h3>
+      <ul class="lista-para">
+        <li>Paso a paso de ${nombres.length ? nombres.length + " tareas del service: " + esc(nombres.join(", ").toLowerCase()) : "todo el service preventivo de su motor"}.</li>
+        <li>Los datos de su manual: aceite, cantidades, bujías, luz y ajustes.</li>
+        <li>Una cosa por pantalla, con avisos de seguridad y de cuándo conviene dejárselo al mecánico.</li>
+        <li>Cada tarea terminada queda anotada sola en su historial de service.</li>
+        <li>Funciona sin señal: úsela en la guardería, en la casa o en la orilla.</li>
+      </ul></div>
+    <div class="precio-card"><small>Pago único, para su motor</small><b>${pesos(c.precio)}</b>${c.usd ? `<span>Unos US$ ${esc(c.usd)}</span>` : ""}</div>
+    ${c.linkPago
+      ? `<a class="btn ok big" href="${esc(c.linkPago)}" target="_blank" rel="noopener" data-ev="compra/sp/mercadopago">Pagar con Mercado Pago</a>`
+      : `<a class="btn ok big" href="${esc(waLink(ws, txtCompra))}" target="_blank" rel="noopener" data-ev="compra/sp/whatsapp">Comprar por WhatsApp</a>`}
+    <div class="panel stack"><h3>¿Ya pagó?</h3>
+      <p class="muted" style="font-size:.95rem">Mande el comprobante por WhatsApp. Le respondemos con su código de activación.</p>
+      <p class="pedido">Su número de pedido: <b>${esc(ped)}</b></p>
+      <a class="btn sec" href="${esc(waLink(ws, txtComprobante))}" target="_blank" rel="noopener" data-ev="compra/sp/comprobante">Mandar el comprobante</a>
+      <form class="stack" id="f-codigo">
+        <div class="field"><label for="in-codigo">Ya tengo mi código</label><input id="in-codigo" type="text" autocapitalize="characters" autocomplete="off" maxlength="8" placeholder="Ej.: K7M2QX" class="codigo-in"></div>
+        <button class="btn ok">Activar la guía</button>
+      </form></div>
+    ${aTurno(tareas().filter(t => ["vencida","proxima"].includes(estado(t).k)), "turno/sp-compra", "Prefiero que lo haga el taller: pedir turno", "link")}
+  </div>`;
+}
 function vServicio(){
+  if (spBloqueado()) return vComprar();
   const items = spItems();
   // Juan (15/11/2026): cartel que aparece una sola vez y hay que aceptar.
   let ok = false; try { ok = localStorage.getItem(KEY_SP + "-ok") === "si"; } catch(e){ ok = true; }
@@ -1165,6 +1218,7 @@ document.addEventListener("click", ev => {
     try { const s = JSON.parse($("#rest").value); if (!s.motor) throw 0; if (s.taller === undefined) s.taller = S.taller; S = s; save(); toast("Datos restaurados"); render(); }
     catch(e){ toast("El texto no es una copia válida. Pegue el texto completo."); }
   }
+  else if (a === "sp-abrir" && spBloqueado()){ contar("compra/sp/ver-desde-tarea"); location.hash = "service-propio"; }
   else if (a === "sp-abrir"){
     const it = spItems().find(x => x.id === b.dataset.id); if (!it) return;
     sp = { id: it.id, paso: it.advertencia ? "aviso" : "intro" }; contar("service-propio/" + it.id);
@@ -1226,6 +1280,11 @@ document.addEventListener("submit", ev => {
     save(); contar("service-taller/" + ids.length);
     toast(ids.length === 1 ? "Tarea guardada" : ids.length + " tareas guardadas");
     location.hash = "mantenimiento";
+  }
+  else if (f.id === "f-codigo"){
+    const c = ($("#in-codigo").value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+    if (CB.codigo && c === CB.codigo(S.pedido, "sp")){ S.compras = Object.assign({}, S.compras, { sp: c }); save(); contar("compra/sp/activada"); toast("¡Listo! La guía quedó activada"); render(); scrollTo(0,0); }
+    else toast("El código no coincide. Revíselo o escríbanos por WhatsApp.");
   }
   else if (f.id === "f-reg"){
     S.registros.push({ tipo:"tarea", tarea:f.dataset.id, fecha:$("#r-fecha").value || hoy(), horas: parseFloat($("#r-horas").value) || 0, nota:$("#r-nota").value.trim() });
