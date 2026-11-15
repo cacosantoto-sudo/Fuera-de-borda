@@ -320,6 +320,17 @@ a.volver{text-decoration:none;color:var(--ink)}
 .instalada-ok{margin:0;font-size:.9rem;color:var(--ok);font-weight:600;text-align:center}
 .sp-cartel{align-items:center;text-align:center}
 .sp-cartel ol{text-align:left}
+/* Talleres adheridos (15/11/2026) */
+.logo-t{width:44px;height:44px;border-radius:12px;flex:none;object-fit:cover;display:inline-flex;align-items:center;justify-content:center}
+.logo-t.ini{background:linear-gradient(160deg,#1592d6,#0a6fae);color:#fff;font-style:normal;font-weight:800;font-size:1rem;letter-spacing:.02em}
+.llamar .logo-t + span{flex:1;min-width:0}
+.su-taller b{font-size:1.2rem;font-variant-numeric:normal}
+.su-taller.sin b{font-size:1.15rem}
+.taller-fila{align-items:center;gap:12px}
+.taller-fila b{flex:1;font-size:1.1rem}
+.lista-para{margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:6px}
+.pie{font-size:.85rem;text-align:center;line-height:1.7}
+.pie a{color:inherit}
 </style>
 
 <div class="app">
@@ -353,6 +364,7 @@ a.volver{text-decoration:none;color:var(--ink)}
 <script src="datos-motores.js"></script>
 <script src="diagnosticos.js"></script>
 <script src="identificar-anio.js"></script>
+<script src="talleres.js"></script>
 <script src="service-propio.js"></script>
 <script>
 (function(){
@@ -434,10 +446,44 @@ function estado(t){
 const nombreEstado = { vencida:"Vencida", proxima:"Próxima", aldia:"Al día", sinregistro:"Revisar", uso:"Cada uso" };
 function pendientes(){ return tareas().filter(t => ["vencida"].includes(estado(t).k)).length; }
 
-/* ---------- Datos del taller (completar con el teléfono real) ---------- */
-// tel: número para llamar, con código de área, sin espacios (ej.: "+5491112345678").
-// whatsapp: el mismo número sin "+" (ej.: "5491112345678"). Si quedan vacíos, la app lo indica.
-const TALLER = { nombre:"Scotto Mecánica Náutica", tel:"+5493425217781", whatsapp:"5493425217781", ver:"342 521-7781" };
+/* ---------- Talleres adheridos (Juan, 15/11/2026): la app ya no está atada a un solo taller ---------- */
+// La lista está en talleres.js. Cada taller tiene su link (?t=codigo); el cliente queda con ese taller.
+// S.taller = código del taller elegido, o "ninguno". Quienes ya usaban la app quedan con TT.anteriores (Scotto).
+const TT = window.TALLERES || { lista:[] };
+function tallerPorCodigo(c){ return (TT.lista || []).find(t => t.codigo === c && t.activo !== false) || null; }
+function taller(){ return S.taller && S.taller !== "ninguno" ? tallerPorCodigo(S.taller) : null; }
+function talleresLista(){ return (TT.lista || []).filter(t => t.activo !== false && !t.muestra); }
+function codigoTaller(){ const t = taller(); return t ? t.codigo : "sin-taller"; }
+function iniciales(n){ return String(n || "").replace(/\(.*?\)/g, "").split(/\s+/).filter(w => w.length > 2).slice(0,2).map(w => w[0].toUpperCase()).join("") || "T"; }
+function logoTaller(t){ return t.logo ? `<img class="logo-t" src="${esc(t.logo)}" alt="">` : `<i class="logo-t ini">${esc(iniciales(t.nombre))}</i>`; }
+function waLink(numero, texto){ return "https://wa.me/" + (numero || "") + "?text=" + encodeURIComponent(texto); }
+function spVisible(){ const t = taller(); return !t || t.servicePropio !== false; }
+function repuestosAlTaller(){ const t = taller(); return !!(t && t.whatsapp && t.repuestos !== false); }
+if (S.motor && S.taller === undefined){ S.taller = tallerPorCodigo(TT.anteriores) ? TT.anteriores : "ninguno"; save(); }
+let tallerLink = null; // taller del link por el que entró (si entró por uno)
+(function(){
+  try {
+    const c = new URLSearchParams(location.search).get("t"), t = c && tallerPorCodigo(c);
+    if (t){ tallerLink = t.codigo; if (S.taller !== t.codigo){ S.taller = t.codigo; if (S.motor) save(); } }
+  } catch(e){}
+})();
+// Que el link (y la app instalada) recuerden el taller: el ícono instalado abre con ?t=codigo.
+function marcarTallerEnLink(){
+  const t = taller();
+  try {
+    const q = new URLSearchParams(location.search);
+    if (t ? q.get("t") !== t.codigo : q.has("t")){ if (t) q.set("t", t.codigo); else q.delete("t"); const qs = q.toString(); history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash); }
+  } catch(e){}
+  try {
+    const base = new URL("./", location.href).href, l = document.querySelector('link[rel="manifest"]');
+    if (!l || !/^https?:/.test(base)) return;
+    const m = { id: base + "index.html", name: "Auxilio Fuera de Borda", short_name: "Auxilio Náutico",
+      start_url: base + "index.html" + (t ? "?t=" + encodeURIComponent(t.codigo) : ""), scope: base, display: "standalone",
+      background_color: "#eaf6fd", theme_color: "#dff1fb", lang: "es-AR",
+      icons: [{ src: base+"icono-192.png", sizes:"192x192", type:"image/png", purpose:"any" }, { src: base+"icono-512.png", sizes:"512x512", type:"image/png", purpose:"any" }, { src: base+"icono-512.png", sizes:"512x512", type:"image/png", purpose:"maskable" }, { src: base+"icono.svg", sizes:"any", type:"image/svg+xml", purpose:"any" }] };
+    l.href = "data:application/manifest+json," + encodeURIComponent(JSON.stringify(m));
+  } catch(e){}
+}
 const PREFECTURA = { nombre:"Prefectura Naval · emergencias", tel:"106", radio:"canal 16" };
 
 /* ---------- Pedir turno al taller ---------- */
@@ -454,6 +500,8 @@ ${lista.map(t => "- "+t.nombre+" ("+estado(t).txt+")").join("\n")}
 /* ---------- Estadísticas anónimas ---------- */
 // Cuentan, SIN datos personales, cuánta gente usa la app, qué motores tienen, qué fallas consultan
 // y cuántas veces llaman o piden turno al taller. No se envía nombre, teléfono, ubicación ni historial.
+// Cada evento lleva adelante el código del taller (ej.: "scotto/sintoma/no-arranca" o "sin-taller/...")
+// para armarle a cada taller su informe mensual.
 // Servicio: GoatCounter (gratuito, sin cookies). Para activarlo, crear una cuenta en goatcounter.com
 // y poner acá el código elegido (ej.: "scotto-fdb"). Mientras quede vacío, la app no envía nada.
 // Si no hay señal (en el agua), los conteos esperan en el celular y se mandan cuando vuelve.
@@ -465,7 +513,7 @@ function modoApp(){ try { return (matchMedia("(display-mode: standalone)").match
 function leerCola(){ try { return JSON.parse(localStorage.getItem(KEY_COLA)) || []; } catch(e){ return []; } }
 function contar(evento){
   if (!estActivas()) return;
-  const cola = leerCola().concat([String(evento).slice(0,120)]).slice(-60);
+  const cola = leerCola().concat([String(codigoTaller() + "/" + evento).slice(0,120)]).slice(-60);
   try { localStorage.setItem(KEY_COLA, JSON.stringify(cola)); } catch(e){}
   enviarCola();
 }
@@ -528,20 +576,21 @@ const ICON = {
 };
 
 /* ---------- Navegación ---------- */
-const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor","service-propio","repuestos","cargar-service"];
-function ruta(){ const h = (location.hash||"").slice(1); if (!S.motor) return "motor"; return RUTAS.includes(h) ? h : "inicio"; }
+const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor","service-propio","repuestos","cargar-service","talleres","para-talleres","acerca"];
+const SIN_MOTOR = ["talleres","para-talleres","acerca"];
+function ruta(){ const h = (location.hash||"").slice(1); if (!S.motor) return SIN_MOTOR.includes(h) ? h : "motor"; if (h === "service-propio" && !spVisible()) return "mantenimiento"; return RUTAS.includes(h) ? h : "inicio"; }
 function render(){
   const r = ruta();
   const p = S.motor ? pendientes() : 0;
-  const pestana = (r === "diagnostico" || r === "ayuda") ? "inicio" : (r === "service-propio" || r === "repuestos" || r === "cargar-service") ? "mantenimiento" : r;
+  const pestana = (r === "diagnostico" || r === "ayuda" || r === "talleres") ? "inicio" : (r === "para-talleres" || r === "acerca") ? "motor" : (r === "service-propio" || r === "repuestos" || r === "cargar-service") ? "mantenimiento" : r;
   $("#tabs").innerHTML = [["inicio","Inicio"],["mantenimiento","Service"],["motor","Mi motor"]].map(([k,l]) =>
     `<a href="#${k}" ${pestana===k?'aria-current="page"':''}>${ICON[k]}${l}${k==="mantenimiento"&&p?`<span class="badge">${p}</span>`:""}</a>`).join("");
   $("#top").innerHTML = S.motor
     ? `<a class="motor" href="#motor"><small>Mi motor · ${esc(S.motor.tiempos)} · ${esc(S.motor.potencia)} HP</small><b>${esc(S.motor.marca)} ${esc(S.motor.modelo)}</b></a>
        <a class="ayuda-btn" href="#ayuda">${ICON_TEL}Pedir ayuda</a>`
-    : `<span class="motor"><small>${esc(TALLER.nombre)}</small><b>Auxilio Fuera de Borda</b></span>`;
+    : `<span class="motor"><small>${esc(taller() ? taller().nombre : "Diagnóstico y service de su motor")}</small><b>Auxilio Fuera de Borda</b></span>`;
   const v = $("#view");
-  v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : r === "service-propio" ? vServicio() : r === "repuestos" ? vRepuestos() : r === "cargar-service" ? vCargar() : vInicio();
+  v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : r === "service-propio" ? vServicio() : r === "repuestos" ? vRepuestos() : r === "cargar-service" ? vCargar() : r === "talleres" ? vTalleres() : r === "para-talleres" ? vParaTalleres() : r === "acerca" ? vAcerca() : vInicio();
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
 }
 window.addEventListener("hashchange", () => { diag = null; rama = null; sp = null; repSel = null; render(); scrollTo(0,0); });
@@ -558,6 +607,9 @@ function vInicio(){
       <a href="#mantenimiento" class="${venc ? "alerta" : ""}">Service<small>${venc ? venc+(venc===1?" tarea vencida":" tareas vencidas") : "Todo al día"}</small></a>
       <a href="#motor">Mi motor<small>${Math.round(S.horas)} horas de uso</small></a>
     </div>
+    ${(() => { const t = taller(); return t
+      ? `<a class="llamar su-taller" href="tel:${esc(t.tel)}">${logoTaller(t)}<span><small>Su taller</small><b>${esc(t.nombre)}</b></span><span class="accion">Llamar</span></a>`
+      : `<a class="llamar su-taller sin" href="#talleres"><span><small>¿Quién le atiende el motor?</small><b>Buscar un taller adherido</b></span><span class="accion">Ver</span></a>`; })()}
     <div class="consejo"><i>!</i><span>Antes de salir: chaleco para todos, remo, ancla y el celular cargado.</span></div>
     ${modoApp() === "instalada" ? `<p class="instalada-ok">✓ App instalada: funciona aunque no tenga señal</p>` : ""}
   </div>`;
@@ -575,12 +627,21 @@ function avisoChico(){
   return `<p class="seguro-chico">Seguridad: chaleco puesto · ancla si va a la deriva · Prefectura <a href="tel:${PREFECTURA.tel}">${PREFECTURA.tel}</a></p>`;
 }
 function llamadas(){
-  const taller = TALLER.tel
-    ? `<a class="llamar" href="tel:${esc(TALLER.tel)}"><span><small>${esc(TALLER.nombre)}</small><b>${esc(TALLER.ver || TALLER.tel)}</b></span><span class="accion">Llamar</span></a>`
-    : `<div class="llamar pendiente"><span><small>${esc(TALLER.nombre)}</small><b>Teléfono del taller: a cargar</b></span></div>`;
-  return `<a class="llamar" href="tel:${PREFECTURA.tel}"><span><small>${esc(PREFECTURA.nombre)}</small><b>${PREFECTURA.tel}</b><small>Por radio: ${esc(PREFECTURA.radio)}</small></span><span class="accion">Llamar</span></a>${taller}`;
+  const t = taller();
+  const tal = t && t.tel ? `<a class="llamar" href="tel:${esc(t.tel)}">${logoTaller(t)}<span><small>${esc(t.nombre)}</small><b>${esc(t.ver || t.tel)}</b></span><span class="accion">Llamar</span></a>` : "";
+  return `<a class="llamar" href="tel:${PREFECTURA.tel}"><span><small>${esc(PREFECTURA.nombre)}</small><b>${PREFECTURA.tel}</b><small>Por radio: ${esc(PREFECTURA.radio)}</small></span><span class="accion">Llamar</span></a>${tal}`;
 }
-function linkWhatsapp(texto){ return "https://wa.me/" + (TALLER.whatsapp || "") + "?text=" + encodeURIComponent(texto); }
+// Pedir turno: con taller, WhatsApp al taller; sin taller, lo lleva a la lista de talleres adheridos.
+function aTurno(lista, ev, texto, cls){
+  const t = taller(), c = cls || "btn ok";
+  if (t && t.whatsapp) return `<a class="${c}" href="${esc(waLink(t.whatsapp, textoTurno(lista)))}" target="_blank" rel="noopener" data-ev="${esc(ev)}">${esc(texto)}</a>`;
+  return `<a class="${c}" href="#talleres" data-ev="${esc(ev)}/sin-taller">Buscar un taller adherido</a>`;
+}
+// Mandar un texto: con taller, a su WhatsApp; sin taller, WhatsApp abre para elegir a quién mandarlo.
+function aMandar(texto, ev, conTaller, sinTaller, cls){
+  const t = taller(), con = !!(t && t.whatsapp);
+  return `<a class="${cls}" href="${esc(waLink(con ? t.whatsapp : "", texto))}" target="_blank" rel="noopener" data-ev="${esc(ev)}${con ? "" : "/sin-taller"}">${esc(con ? conTaller : sinTaller)}</a>`;
+}
 
 /* ---------- Vista: pedir ayuda ---------- */
 function vAyuda(){
@@ -627,7 +688,7 @@ function vDiag(){
   if (diag.fin === "resuelto"){
     return `<div class="stack">${head}
       <section class="bien"><span class="eyebrow">Se solucionó</span><h1>${esc(paso.solucion || "¡Bien! El motor anda")}</h1>
-      <p>Si la falla vuelve, empiece otra vez desde este síntoma. Cuando vuelva a tierra firme, conviene que lo revise el taller.</p></section>
+      <p>Si la falla vuelve, empiece otra vez desde este síntoma. Cuando vuelva a tierra firme, conviene que lo revise ${taller() ? "el taller" : "un mecánico"}.</p></section>
       <button class="btn ok big" data-a="guardar-diag">Guardar en el historial</button>
       <button class="link" data-a="volver-sintomas">Volver a la lista</button></div>`;
   }
@@ -638,7 +699,7 @@ function vDiag(){
       <section class="stop"><span class="eyebrow">Hasta acá llega lo que puede hacer usted</span><h1>Pida ayuda. No siga probando.</h1></section>
       ${bloqueSeguro("Mientras tanto")}
       ${llamadas()}
-      <a class="btn ok big" href="${esc(linkWhatsapp(res))}" target="_blank" rel="noopener" data-ev="whatsapp/diagnostico">Mandar al mecánico lo que ya probé</a>
+      ${aMandar(res, "whatsapp/diagnostico", "Mandar al mecánico lo que ya probé", "Mandar por WhatsApp lo que ya probé", "btn ok big")}
       <details class="tecnico"><summary>Muéstrele esto al mecánico</summary>
         <ul>${paso.como.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>
         <div class="resumen" id="resumen" style="margin-top:12px">${esc(res)}</div>
@@ -704,10 +765,10 @@ function vMant(){
     ${(() => { const pend = est.filter(x => x.e.k === "vencida" || x.e.k === "proxima").map(x => x.t);
       return pend.length ? `<div class="panel stack"><h3>Le toca service</h3>
       <p class="muted" style="font-size:.92rem">${pend.length === 1 ? "Hay 1 tarea vencida o próxima" : "Hay "+pend.length+" tareas vencidas o próximas"}. Pida turno y llévelo al taller antes de la próxima salida.</p>
-      <a class="btn ok" href="${esc(linkWhatsapp(textoTurno(pend)))}" target="_blank" rel="noopener" data-ev="turno/todo">Pedir turno por WhatsApp</a></div>` : ""; })()}
+      ${aTurno(pend, "turno/todo", "Pedir turno por WhatsApp")}</div>` : ""; })()}
     <div class="sp-entrada">
-      <a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>Guía paso a paso para su motor</small></a>
-      <a class="sp-btn sec" href="#repuestos"><b>Comprar los repuestos</b><small>La lista de lo que lleva su motor</small></a>
+      ${spVisible() ? `<a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>Guía paso a paso para su motor</small></a>` : ""}
+      ${(() => { const t = taller(); return t && t.repuestos === false ? "" : `<a class="sp-btn sec" href="#repuestos"><b>${repuestosAlTaller() ? "Comprar los repuestos" : "Lista de repuestos"}</b><small>La lista de lo que lleva su motor</small></a>`; })()}
       <a class="sp-btn sec" href="#cargar-service"><b>Me lo hizo el taller</b><small>Anote el service en 3 toques</small></a>
     </div>
     <div class="sumario"><div class="v"><b>${n("vencida")}</b><span class="eyebrow">Vencidas</span></div><div class="p"><b>${n("proxima")+n("sinregistro")}</b><span class="eyebrow">A revisar</span></div><div class="a"><b>${n("aldia")}</b><span class="eyebrow">Al día</span></div></div>
@@ -745,9 +806,9 @@ function tareaHTML(t, e){
       <p>${esc(t.porque)}</p>${t.notaMarca?`<p class="notice info">${esc(t.notaMarca)}</p>`:""}${cc.primeraHoras?`<p class="muted" style="font-size:.9rem">La primera revisión (a las ${cc.primeraHoras} h) es solo para motores nuevos, 0 horas. En un motor usado, siga el intervalo normal.</p>`:""}
       <div class="row"><span class="chip info">${esc(freq)}</span>${t.segun?`<span class="chip aldia">Según ${esc(t.segun)}</span>`:(t.cada&&!t.cada.usos?`<span class="chip proxima">Intervalo general</span>`:"")}${t.quien==="mecanico"?`<span class="chip mecanico">Tarea de taller</span>`:`<span class="chip simple">La puede hacer usted</span>`}</div>
       <ol>${t.pasos.map(p=>`<li>${esc(p)}</li>`).join("")}</ol>
-      ${spItems().some(i => i.tarea === t.id) ? `<button class="btn sec" data-a="sp-abrir" data-id="${spItems().find(i => i.tarea === t.id).id}" data-ir="1">Ver cómo hacerlo paso a paso</button>` : ""}
+      ${spVisible() && spItems().some(i => i.tarea === t.id) ? `<button class="btn sec" data-a="sp-abrir" data-id="${spItems().find(i => i.tarea === t.id).id}" data-ir="1">Ver cómo hacerlo paso a paso</button>` : ""}
       ${t.materiales && t.materiales.length ? `<p><strong>Materiales:</strong> ${t.materiales.map(esc).join(", ")}</p>` : ""}
-      ${["vencida","proxima","sinregistro"].includes(e.k) ? `<a class="btn ok" href="${esc(linkWhatsapp(textoTurno([t])))}" target="_blank" rel="noopener" data-ev="turno/${esc(t.id)}">${t.quien==="mecanico" ? "Pedir turno al taller" : "Prefiero que lo haga el taller: pedir turno"}</a>` : ""}
+      ${["vencida","proxima","sinregistro"].includes(e.k) ? aTurno([t], "turno/" + t.id, t.quien==="mecanico" ? "Pedir turno al taller" : "Prefiero que lo haga el taller: pedir turno") : ""}
       ${u ? `<p class="muted" style="font-size:.9rem">Último registro: ${esc(fmtFecha(u.fecha))}${u.horas!=null?` a las ${Math.round(u.horas)} h`:""}.</p>` : ""}
       ${reg ? `<form class="stack" id="f-reg" data-id="${t.id}">
           <div class="grid2"><div class="field"><label for="r-fecha">Fecha</label><input id="r-fecha" type="date" value="${hoy()}" required></div>
@@ -826,7 +887,7 @@ function vServicio(){
       ${queda.length ? `<div class="panel stack"><h3>Esto lo hace el taller</h3>
         <p class="muted" style="font-size:.95rem">Necesita desarmar partes del motor y herramientas especiales.</p>
         <ul class="sp-taller">${queda.map(t => `<li><span>${esc(t.nombre)}</span><span class="chip ${estado(t).k}">${nombreEstado[estado(t).k]}</span></li>`).join("")}</ul>
-        <a class="btn ok" href="${esc(linkWhatsapp(textoTurno(queda)))}" target="_blank" rel="noopener" data-ev="turno/service-taller">Pedir turno al taller</a></div>` : ""}
+        ${aTurno(queda, "turno/service-taller", "Pedir turno al taller")}</div>` : ""}
       <a class="btn sec" href="#repuestos">Comprar los repuestos</a>
       ${prog.hechos.length ? `<button class="link" data-a="sp-reset">Empezar un service nuevo (borrar las marcas)</button>` : ""}
     </div>`;
@@ -841,8 +902,8 @@ function vServicio(){
       <button class="volver" data-a="sp-lista">‹ Volver</button>
       <section class="stop"><span class="eyebrow">Atención</span><h1>${esc(a.titulo)}</h1></section>
       <ol class="pasos-num">${a.texto.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
-      <a class="btn ok big" href="${esc(linkWhatsapp(textoTurno(tareas().filter(t => t.id === "carburador"))))}" target="_blank" rel="noopener" data-ev="turno/carburador-guia">Pedir turno al taller</a>
-      ${TALLER.tel ? `<a class="llamar" href="tel:${esc(TALLER.tel)}"><span><small>${esc(TALLER.nombre)}</small><b>${esc(TALLER.ver || TALLER.tel)}</b></span><span class="accion">Llamar</span></a>` : ""}
+      ${aTurno(tareas().filter(t => t.id === "carburador"), "turno/carburador-guia", "Pedir turno al taller", "btn ok big")}
+      ${(() => { const t = taller(); return t && t.tel ? `<a class="llamar" href="tel:${esc(t.tel)}">${logoTaller(t)}<span><small>${esc(t.nombre)}</small><b>${esc(t.ver || t.tel)}</b></span><span class="accion">Llamar</span></a>` : ""; })()}
       <button class="btn ghost" data-a="sp-riesgo-ok">Entiendo el riesgo, quiero ver la guía</button>
     </div>`;
   }
@@ -888,7 +949,7 @@ function vServicio(){
     ${p.boton === "repuestos" ? `<a class="btn sec" href="#repuestos">Comprar los repuestos</a>` : ""}
     <div class="respuestas">
       ${ultimoPaso ? `<button class="btn ok big" data-a="sp-terminar">Terminé esta tarea</button>` : `<button class="btn big" data-a="sp-paso" data-n="${sp.paso+1}">Listo, siguiente paso</button>`}
-      ${it.nivel === "riesgo" ? `<a class="link" href="${esc(linkWhatsapp(textoTurno(tareas().filter(t => t.id === "carburador"))))}" target="_blank" rel="noopener" data-ev="turno/carburador-paso-${sp.paso+1}">Prefiero que lo haga el taller</a>` : ""}
+      ${it.nivel === "riesgo" ? aTurno(tareas().filter(t => t.id === "carburador"), "turno/carburador-paso-" + (sp.paso+1), "Prefiero que lo haga el taller", "link") : ""}
     </div>
   </div>`;
 }
@@ -912,15 +973,15 @@ function vRepuestos(){
   if (!repSel) repSel = new Set(lista.filter(x => x.toca).map(x => x.r.id));
   return `<div class="stack">
     <a class="volver" href="#mantenimiento">‹ Service</a>
-    <h1>Comprar los repuestos</h1>
-    <p class="muted">Lista para su ${esc(motorLinea())}, con los datos del manual. Marque lo que necesita y mándenos el pedido por WhatsApp: le confirmamos precio y disponibilidad.</p>
+    <h1>${repuestosAlTaller() ? "Comprar los repuestos" : "Lista de repuestos"}</h1>
+    <p class="muted">Lista para su ${esc(motorLinea())}, con los datos del manual. ${repuestosAlTaller() ? "Marque lo que necesita y mándele el pedido a " + esc(taller().nombre) + " por WhatsApp: le confirman precio y disponibilidad." : "Marque lo que necesita y mande la lista por WhatsApp a su mecánico o a la casa de repuestos."}</p>
     ${lista.some(x => x.toca) ? `<p class="muted" style="font-size:.92rem">Ya dejamos marcado lo de las tareas que le tocan.</p>` : ""}
     <div class="panel rep-lista">${lista.map(x => `<label class="rep">
       <input type="checkbox" data-rep="${x.r.id}" ${repSel.has(x.r.id) ? "checked" : ""}>
       <span><b>${esc(x.r.nombre)}</b>${(x.det || x.r.sinDato || x.r.modelo) ? `<small>${esc(x.det || x.r.sinDato || "El taller le confirma el modelo para su motor")}</small>` : ""}${x.r.nota ? `<span class="chip mecanico" style="margin-top:4px">${esc(x.r.nota)}</span>` : ""}</span>
     </label>`).join("")}</div>
-    <button class="btn ok big" data-a="pedir-repuestos">Pedir por WhatsApp</button>
-    <p class="muted" style="font-size:.88rem">${esc(TALLER.nombre)}. Por ahora no se paga en la app: el taller le responde por WhatsApp.</p>
+    <button class="btn ok big" data-a="pedir-repuestos">${repuestosAlTaller() ? "Pedir por WhatsApp" : "Mandar la lista por WhatsApp"}</button>
+    <p class="muted" style="font-size:.88rem">${repuestosAlTaller() ? esc(taller().nombre) + ". Por ahora no se paga en la app: el taller le responde por WhatsApp." : "WhatsApp se abre para que elija a quién mandársela."}</p>
   </div>`;
 }
 function textoRepuestos(xs){
@@ -947,7 +1008,7 @@ function vCargar(){
       <div class="panel rep-lista">${est.map(x => `<label class="rep">
         <input type="checkbox" name="ct" value="${x.t.id}" ${marcar(x) ? "checked" : ""}>
         <span><b>${esc(x.t.nombre)}</b><small>${esc(x.e.txt)}</small></span></label>`).join("")}</div>
-      <div class="field"><label for="ct-taller">Taller (opcional)</label><input id="ct-taller" type="text" value="${esc(TALLER.nombre)}"></div>
+      <div class="field"><label for="ct-taller">Taller (opcional)</label><input id="ct-taller" type="text" value="${esc((taller() || {}).nombre || "")}" placeholder="Nombre del taller"></div>
       <button class="btn ok big">Guardar el service</button>
     </form>
   </div>`;
@@ -963,7 +1024,8 @@ function vMotor(){
   const nuevo = !S.motor;
   return `<div class="stack">
     ${nuevo ? `<div class="stack"><h2>Configure su motor</h2><p class="muted">La app le va a mostrar el mantenimiento y el diagnóstico pensados para su motor. Puede cambiarlo cuando quiera.</p></div>` : ""}
-    ${f && f.estado === "revision" ? `<div class="notice info">Datos tomados de: ${esc(f.fuente)}. Pendiente de validación del taller.</div>` : f && f.estado !== "completo" ? `<div class="notice info">La ficha de este motor está en preparación. Los datos marcados "A confirmar" todavía no están validados por el taller.</div>` : ""}
+    ${nuevo && taller() ? `<a class="llamar su-taller" href="tel:${esc(taller().tel)}">${logoTaller(taller())}<span><small>Le recomienda esta app</small><b>${esc(taller().nombre)}</b></span></a>` : ""}
+    ${f && f.estado === "revision" ? `<div class="notice info">Datos tomados de: ${esc(f.fuente)}. Pendiente de validación.</div>` : f && f.estado !== "completo" ? `<div class="notice info">La ficha de este motor está en preparación. Los datos marcados "A confirmar" todavía no están validados por un mecánico.</div>` : ""}
     <form class="panel stack" id="f-motor">
       <div class="field"><label for="m-cat">Elegir de la lista</label>
         <select id="m-cat"><option value="">Mi motor no está en la lista</option>${cat}</select></div>
@@ -981,13 +1043,16 @@ function vMotor(){
       <div class="field"><span style="font-weight:600;font-size:.9rem">Tipo de uso</span>
         <div class="seg"><input type="radio" name="uso" id="u1" value="recreativo" ${m.uso!=="trabajo"?"checked":""}><label for="u1">Recreativo</label><input type="radio" name="uso" id="u2" value="trabajo" ${m.uso==="trabajo"?"checked":""}><label for="u2">Trabajo</label></div>
         <small class="muted">Trabajo: pesca, transporte o uso diario. Algunas marcas piden mantenimiento más seguido.</small></div>
+      <div class="field"><label for="m-taller">¿Quién le atiende el motor?</label>
+        <select id="m-taller">${opcionesTaller()}</select>
+        <small class="muted">Los botones de llamar, pedir turno y repuestos van a este taller. <a href="#talleres">Ver talleres adheridos</a></small></div>
       ${nuevo ? `<div class="field"><label for="m-horas">Horas de uso actuales</label><input id="m-horas" type="number" inputmode="decimal" min="0" step="0.5" value="0"></div>` : ""}
       <button class="btn full">${nuevo ? "Empezar" : "Guardar cambios"}</button>
     </form>
     <div id="id-anio" hidden></div>
 
     ${f ? `<div class="panel stack"><h3>Datos técnicos</h3>${f.origen?`<p class="muted" style="font-size:.92rem">Origen: ${esc(f.origen)}${f.hermanos.length?`. Comparte la misma base mecánica con: ${esc(f.hermanos.join(", "))}.`:""}</p>`:""}<table class="datos"><tbody>${f.datosTecnicos.map(x=>`<tr><td>${esc(x.dato)}</td><td class="${/confirmar/i.test(x.valor)?"pend":""}">${esc(x.valor)}</td></tr>`).join("")}</tbody></table>
-      ${(f.consejos||[]).length ? `<h3>Consejos del taller</h3><ul style="margin:0;padding-left:1.2em">${f.consejos.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>`:""}</div>` : ""}
+      ${(f.consejos||[]).length ? `<h3>Consejos de mecánico</h3><ul style="margin:0;padding-left:1.2em">${f.consejos.map(c=>`<li>${esc(c)}</li>`).join("")}</ul>`:""}</div>` : ""}
 
     ${!nuevo ? `<div class="panel stack"><h3>Copia de seguridad</h3>
       <p class="muted" style="font-size:.92rem">Sus datos se guardan solo en este celular. Copie este texto y guárdelo (por ejemplo, mándeselo por WhatsApp) para no perder el historial.</p>
@@ -998,7 +1063,78 @@ function vMotor(){
     ${!nuevo ? `<div class="panel stack"><h3>Estadísticas anónimas</h3>
       <p class="muted" style="font-size:.92rem">Para mejorar la app contamos, sin datos personales, qué motores y qué fallas se consultan. No se envía su nombre, su teléfono, su ubicación ni su historial.</p>
       <label class="row" style="font-weight:600"><input type="checkbox" id="est-ok" style="width:24px;height:24px" ${estPermitidas() ? "checked" : ""}> Ayudar a mejorar la app</label></div>` : ""}
-    <p class="muted" style="font-size:.85rem;text-align:center">Contenido basado en la experiencia de taller de Scotto Mecánica Náutica. Ante la duda, consulte a un mecánico.</p>
+    <p class="muted pie">Ante la duda, consulte a un mecánico.<br><a href="#acerca">Acerca de la app, términos y privacidad</a> · <a href="#para-talleres">¿Tiene un taller?</a></p>
+  </div>`;
+}
+
+/* ---------- Talleres adheridos: elegir taller ---------- */
+function opcionesTaller(){
+  const ts = talleresLista().slice(), actual = S.taller || "ninguno";
+  const extra = tallerPorCodigo(actual); if (extra && !ts.includes(extra)) ts.unshift(extra);
+  const ciudades = [...new Set(ts.map(t => t.ciudad || "Otras"))].sort();
+  return `<option value="ninguno">No tengo taller</option>` + ciudades.map(c => `<optgroup label="${esc(c)}">${ts.filter(t => (t.ciudad || "Otras") === c).map(t => `<option value="${esc(t.codigo)}" ${actual === t.codigo ? "selected" : ""}>${esc(t.nombre)}</option>`).join("")}</optgroup>`).join("");
+}
+function vTalleres(){
+  const ts = talleresLista(), act = taller();
+  const ciudades = [...new Set(ts.map(t => t.ciudad || "Otras"))].sort();
+  return `<div class="stack">
+    <a class="volver" href="#${S.motor ? "inicio" : "motor"}">‹ Volver</a>
+    <h1>Talleres adheridos</h1>
+    <p class="muted">Elija el taller que le atiende el motor. Los botones de llamar, pedir turno y repuestos van a ese taller.</p>
+    ${ciudades.map(c => `<div class="section-title"><h2>${esc(c)}</h2></div>
+      ${ts.filter(t => (t.ciudad || "Otras") === c).map(t => `<div class="panel stack">
+        <div class="row taller-fila">${logoTaller(t)}<b>${esc(t.nombre)}</b>${act && act.codigo === t.codigo ? `<span class="chip aldia">Su taller</span>` : ""}</div>
+        <div class="grid2"><a class="btn sec" href="tel:${esc(t.tel)}">Llamar</a>${act && act.codigo === t.codigo ? `<a class="btn sec" href="${esc(waLink(t.whatsapp, "Hola, le escribo desde la app Auxilio Fuera de Borda."))}" target="_blank" rel="noopener">WhatsApp</a>` : `<button class="btn ok" data-a="elegir-taller" data-c="${esc(t.codigo)}">Elegir</button>`}</div>
+      </div>`).join("")}`).join("")}
+    ${act ? `<button class="link" data-a="elegir-taller" data-c="ninguno">Ya no tengo taller</button>` : ""}
+    <p class="muted" style="font-size:.92rem">¿Su taller no está en la lista? Puede seguir usando la app igual. Si quiere, pásele a su mecánico la <a href="#para-talleres">información para talleres</a>.</p>
+  </div>`;
+}
+function vParaTalleres(){
+  const c = TT.contacto || {};
+  const txt = "Hola, tengo un taller y quiero ofrecerles la app Auxilio Fuera de Borda a mis clientes. ¿Me pasan información?";
+  return `<div class="stack">
+    <a class="volver" href="#motor">‹ Mi motor</a>
+    <h1>Para talleres</h1>
+    <p class="muted">Ofrézcales a sus clientes una app de auxilio con el nombre de su taller. Cuando el motor falla, la app los guía y, si hace falta, lo llaman a usted.</p>
+    <div class="panel stack"><h3>Qué recibe su taller</h3>
+      <ul class="lista-para">
+        <li>Un link y un código QR propios: el cliente que entra por ahí ve el nombre y el logo de su taller.</li>
+        <li>Los botones de llamar, mandar lo que ya probó y pedir turno van a su teléfono y a su WhatsApp.</li>
+        <li>Pedidos de repuestos por WhatsApp, con la lista justa para el motor de cada cliente.</li>
+        <li>Calcos con el QR para pegar en el motor o en el tablero de la lancha.</li>
+        <li>Un informe mensual: cuántos clientes la usan, qué fallas consultan y cuántos turnos y repuestos le pidieron.</li>
+        <li>Diagnóstico y mantenimiento armados con los manuales de cada marca, para más de 130 motores.</li>
+      </ul>
+      <p class="muted" style="font-size:.92rem">Usted decide si sus clientes ven "Haga el service usted mismo" y "Comprar los repuestos".</p></div>
+    <div class="panel stack"><h3>Precio</h3>
+      <p><b>$20.000 por mes</b> o <b>$200.000 por año</b> (dos meses de regalo).</p>
+      <p class="muted" style="font-size:.92rem">Los primeros 10 talleres tienen 3 meses sin cargo. Para sus clientes la app es gratis y no pide registrarse.</p></div>
+    ${c.whatsapp ? `<a class="btn ok big" href="${esc(waLink(c.whatsapp, txt))}" target="_blank" rel="noopener" data-ev="para-talleres/contacto">Quiero sumar mi taller</a>` : ""}
+  </div>`;
+}
+function vAcerca(){
+  return `<div class="stack">
+    <a class="volver" href="#motor">‹ Mi motor</a>
+    <h1>Acerca de la app</h1>
+    <div class="panel stack"><h3>Quién la hace</h3>
+      <p>Auxilio Fuera de Borda es una app independiente para dueños de lanchas con motor fuera de borda. El contenido técnico lo prepara Juan José Scotto, mecánico náutico (Scotto Mecánica Náutica, Santa Fe), a partir de los manuales de cada marca.</p>
+      <p class="muted" style="font-size:.92rem">No es una app oficial de ninguna marca de motores. Las marcas se nombran solo para identificar cada motor.</p></div>
+    <div class="panel stack"><h3>Términos de uso</h3>
+      <ul class="lista-para">
+        <li>La app orienta: no reemplaza la revisión de un mecánico. Ante la duda, no siga probando y pida ayuda.</li>
+        <li>Ante un peligro en el agua, llame primero a Prefectura (106 o canal 16).</li>
+        <li>Los datos técnicos salen de los manuales de cada marca. Si su manual dice otra cosa, vale el manual.</li>
+        <li>Cada taller adherido responde por su propia atención, sus turnos, sus precios y sus repuestos.</li>
+        <li>Usar la app es gratis para los dueños de lanchas.</li>
+      </ul></div>
+    <div class="panel stack"><h3>Privacidad</h3>
+      <ul class="lista-para">
+        <li>Su motor, sus horas y su historial se guardan solo en este celular. La app no los manda a ningún lado.</li>
+        <li>No pide nombre, teléfono, correo ni ubicación.</li>
+        <li>Lo que usted manda por WhatsApp (turnos, pedidos, lo que ya probó) le llega solo a quien usted le escribe.</li>
+        <li>Si lo permite, la app cuenta de forma anónima qué motores y qué fallas se consultan, para mejorarla y para el informe de cada taller. Se desactiva en "Mi motor".</li>
+      </ul></div>
   </div>`;
 }
 
@@ -1026,7 +1162,7 @@ document.addEventListener("click", ev => {
   else if (a === "copiar"){ copiar($("#resumen").textContent, $("#resumen")); }
   else if (a === "copiar-bk"){ copiar(JSON.stringify(S), $("#bk")); }
   else if (a === "restaurar"){
-    try { const s = JSON.parse($("#rest").value); if (!s.motor) throw 0; S = s; save(); toast("Datos restaurados"); render(); }
+    try { const s = JSON.parse($("#rest").value); if (!s.motor) throw 0; if (s.taller === undefined) s.taller = S.taller; S = s; save(); toast("Datos restaurados"); render(); }
     catch(e){ toast("El texto no es una copia válida. Pegue el texto completo."); }
   }
   else if (a === "sp-abrir"){
@@ -1058,7 +1194,12 @@ document.addEventListener("click", ev => {
     if (!xs.length){ toast("Marque al menos un repuesto"); return; }
     xs.forEach(x => contar("repuesto/" + x.r.id + (x.det ? "/" + x.det : "")));
     contar("pedido-repuestos/" + xs.length);
-    window.open(linkWhatsapp(textoRepuestos(xs)), "_blank", "noopener");
+    window.open(waLink(repuestosAlTaller() ? taller().whatsapp : "", textoRepuestos(xs)), "_blank", "noopener");
+  }
+  else if (a === "elegir-taller"){
+    S.taller = b.dataset.c; if (S.motor) save(); marcarTallerEnLink(); contar("elegir-taller");
+    const t = taller(); toast(t ? "Su taller: " + t.nombre : "Listo: sin taller");
+    location.hash = S.motor ? "inicio" : "motor";
   }
   else if (a === "tarea"){ abierta = abierta === b.dataset.id ? null : b.dataset.id; registrando = null; render(); }
   else if (a === "registrar"){ registrando = b.dataset.id; render(); }
@@ -1102,6 +1243,7 @@ document.addEventListener("submit", ev => {
       uso: (f.querySelector('[name="uso"]:checked') || {}).value || "recreativo"
     };
     if (nuevo) S.horas = parseFloat(($("#m-horas")||{}).value) || 0;
+    S.taller = ($("#m-taller") || {}).value || "ninguno"; marcarTallerEnLink();
     save(); toast(nuevo ? "Motor configurado" : "Cambios guardados");
     contar("motor/" + [S.motor.marca, S.motor.modelo, S.motor.modelo.includes(S.motor.tiempos) ? "" : S.motor.tiempos].filter(Boolean).join(" "));
     if (nuevo) location.hash = "inicio"; else render();
@@ -1120,6 +1262,7 @@ document.addEventListener("change", ev => {
 });
 
 /* ---------- Arranque ---------- */
+marcarTallerEnLink();
 // Primera vez: dejamos preseleccionado el motor de ejemplo para que se vea cómo funciona.
 render();
 if (!S.motor){ const sel = $("#m-cat"); if (sel && D.MOTORES[0]){ sel.value = D.MOTORES[0].id; sel.dispatchEvent(new Event("change", { bubbles:true })); } }

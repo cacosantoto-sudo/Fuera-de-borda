@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kit del taller</title>
+<link rel="icon" href="icono.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap">
+<style>
+:root{--ink:#0c2a3e;--muted:#4f6b7d;--mar:#0a6fae;--sos:#f26a1b;--bg:#eaf6fd;--card:#fff;--line:#cfe3ef}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,sans-serif;color:var(--ink);background:linear-gradient(180deg,#dff1fb,#f6fbfe 60%);min-height:100vh}
+main{max-width:900px;margin:0 auto;padding:24px 16px 48px}
+h1{font-size:1.8rem;margin:0 0 6px;letter-spacing:-.02em}
+h2{font-size:1.2rem;margin:0 0 10px}
+p{line-height:1.5}
+.muted{color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:20px;margin-top:18px;box-shadow:0 10px 30px rgba(10,60,100,.08)}
+.cab{display:flex;align-items:center;gap:14px}
+.logo{width:64px;height:64px;border-radius:16px;object-fit:cover;flex:none;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#1592d6,#0a6fae);color:#fff;font-weight:800;font-size:1.4rem}
+.btn{display:inline-block;border:0;border-radius:16px;padding:14px 18px;font:700 1rem Inter,sans-serif;cursor:pointer;background:var(--mar);color:#fff;text-decoration:none}
+.btn.sec{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.fila{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+.link{word-break:break-all;font-weight:600;background:var(--bg);padding:10px 12px;border-radius:12px}
+textarea{width:100%;font:1rem Inter,sans-serif;border:1px solid var(--line);border-radius:12px;padding:10px;min-height:150px}
+.calcos{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.calco{border:3px solid var(--sos);border-radius:22px;padding:16px;text-align:center;background:#fff;break-inside:avoid}
+.calco .t{font-size:1.35rem;font-weight:800;line-height:1.15;margin:0 0 4px}
+.calco .s{margin:0 0 10px;color:var(--muted);font-weight:600}
+.calco .qr{display:flex;justify-content:center;margin:8px 0}
+.calco .qr svg{width:170px;height:170px}
+.calco .n{font-weight:800;font-size:1.05rem;margin:8px 0 0}
+.calco .tel{font-weight:700;color:var(--mar)}
+.calco .app{font-size:.8rem;color:var(--muted);margin-top:6px}
+.error{border-color:var(--sos)}
+@media print{
+  body{background:#fff}
+  .no-print{display:none!important}
+  main{padding:0}
+  .card{box-shadow:none;border:0;padding:0;margin:0}
+  .calcos{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<main id="kit"></main>
+<script src="talleres.js"></script>
+<script src="qrcode.js"></script>
+<script>
+(function(){
+  "use strict";
+  var esc = function(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); };
+  var TT = window.TALLERES || { lista: [] };
+  var codigo = new URLSearchParams(location.search).get("t");
+  var t = (TT.lista || []).filter(function(x){ return x.codigo === codigo && x.activo !== false; })[0];
+  var main = document.getElementById("kit");
+  if (!t){
+    main.innerHTML = '<div class="card error"><h1>Kit del taller</h1><p>Falta el código del taller en el link, o el taller no está activo. El link tiene que terminar en <b>kit.html?t=CODIGO</b>.</p></div>';
+    return;
+  }
+  var base = new URL("./", location.href).href;
+  var link = base + "?t=" + encodeURIComponent(t.codigo);
+  var ini = String(t.nombre).replace(/\(.*?\)/g, "").split(/\s+/).filter(function(w){ return w.length > 2; }).slice(0,2).map(function(w){ return w[0].toUpperCase(); }).join("") || "T";
+  var logo = t.logo ? '<img class="logo" src="' + esc(t.logo) + '" alt="">' : '<span class="logo">' + esc(ini) + '</span>';
+  var mensaje = "Hola, le paso la app gratuita de " + t.nombre + " para su motor fuera de borda: \"Auxilio Fuera de Borda\".\n" +
+    "Si el motor falla en el agua, le guía paso a paso y nos puede llamar con un toque. También le avisa cuándo le toca el service.\n" +
+    "Ábrala en el celular y toque \"Instalar la app\" (funciona sin señal):\n" + link;
+  var calco = function(){ return '<div class="calco"><p class="t">¿Problemas con el motor?</p><p class="s">Escanee y le ayudamos paso a paso</p><div class="qr"></div><p class="n">' + esc(t.nombre) + '</p>' + (t.ver ? '<p class="tel" style="margin:2px 0 0">' + esc(t.ver) + '</p>' : '') + '<p class="app">App gratuita Auxilio Fuera de Borda · Prefectura 106</p></div>'; };
+  main.innerHTML =
+    '<div class="card no-print"><div class="cab">' + logo + '<div><h1>Kit del taller</h1><p class="muted" style="margin:0">' + esc(t.nombre) + (t.ciudad ? ' · ' + esc(t.ciudad) : '') + '</p></div></div></div>' +
+    '<div class="card no-print"><h2>1. Su link</h2><p class="muted">Quien entra por este link ve la app con el nombre de su taller, y los botones lo llaman y le escriben a usted.</p><p class="link" id="link">' + esc(link) + '</p>' +
+      '<div class="fila"><button class="btn" data-copiar="link">Copiar el link</button><a class="btn sec" href="' + esc(link) + '" target="_blank" rel="noopener">Ver cómo la ve su cliente</a></div></div>' +
+    '<div class="card no-print"><h2>2. Mensaje para sus clientes</h2><p class="muted">Cópielo y mándelo por WhatsApp a sus clientes, o a una lista de difusión.</p><textarea id="msj">' + esc(mensaje) + '</textarea>' +
+      '<div class="fila"><button class="btn" data-copiar="msj">Copiar el mensaje</button><a class="btn sec" href="https://wa.me/?text=' + encodeURIComponent(mensaje) + '" target="_blank" rel="noopener">Abrir WhatsApp</a></div></div>' +
+    '<div class="card"><h2 class="no-print">3. Calcos para imprimir</h2><p class="muted no-print">Imprímalas en papel autoadhesivo y péguelas en la tapa del motor, en el tablero de la lancha o en el mostrador. Cada hoja trae 4.</p>' +
+      '<div class="fila no-print" style="margin-bottom:16px"><button class="btn" onclick="print()">Imprimir calcos</button></div>' +
+      '<div class="calcos">' + calco() + calco() + calco() + calco() + '</div></div>';
+  var qrs = main.querySelectorAll(".qr");
+  var svgQR = null;
+  try { var q = qrcode(0, "M"); q.addData(link); q.make(); svgQR = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch(e){}
+  if (svgQR){ for (var i = 0; i < qrs.length; i++) qrs[i].innerHTML = svgQR; }
+  else { for (var j = 0; j < qrs.length; j++) qrs[j].innerHTML = '<p class="link">' + esc(link) + '</p>'; }
+  main.addEventListener("click", function(e){
+    var b = e.target.closest("[data-copiar]"); if (!b) return;
+    var el = document.getElementById(b.getAttribute("data-copiar")), txt = el.value || el.textContent;
+    var ok = function(){ var o = b.textContent; b.textContent = "Copiado"; setTimeout(function(){ b.textContent = o; }, 1500); };
+    if (navigator.clipboard) navigator.clipboard.writeText(txt).then(ok, function(){ if (el.select) el.select(); });
+    else if (el.select){ el.select(); document.execCommand("copy"); ok(); }
+  });
+})();
+</script>
+</body>
+</html>
