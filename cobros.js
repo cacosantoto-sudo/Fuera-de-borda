@@ -21,8 +21,22 @@ window.COBROS = {
     // ve la pantalla de compra y puede activar la guía con este código, sin pagar.
     // Los demás usuarios no ven nada distinto. Para salir: el botón de la pantalla, o ?prueba=0.
     codigoPrueba: "PRUEBA"
+  },
+  // Suscripción de los talleres adheridos (página "Para talleres").
+  // activo:false = la página dice que adherirse es sin cargo durante el lanzamiento (no muestra precios).
+  // Con ?prueba=1 se ven los precios tal como quedarían. El alta y la baja de cada taller se hacen en talleres.js.
+  talleres: {
+    activo: false,
+    precioMes: 20000,
+    precioAnio: 200000,
+    mesesGratis: 3,          // para los primeros talleres
+    primeros: 10
   }
 };
+/* RESUMEN DE INTERRUPTORES (Juan, 15/11/2026: todo lo que cobra queda en prueba hasta que él decida):
+   servicePropio.activo  -> cobrar la guía "Haga el service usted mismo"
+   talleres.activo       -> mostrar los precios a los talleres
+   Repuestos: no se cobra en la app; el taller responde por WhatsApp con su precio. */
 /* Código de activación: sale del número de pedido. No cambiar la "sal" una vez que se vendió,
    porque los códigos ya entregados dejarían de funcionar. */
 window.COBROS.codigo = function(pedido, producto){

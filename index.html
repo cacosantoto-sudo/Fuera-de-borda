@@ -1168,9 +1168,14 @@ function vParaTalleres(){
         <li>Diagnóstico y mantenimiento armados con los manuales de cada marca, para más de 130 motores.</li>
       </ul>
       <p class="muted" style="font-size:.92rem">Usted decide si sus clientes ven "Haga el service usted mismo" y "Comprar los repuestos".</p></div>
-    <div class="panel stack"><h3>Precio</h3>
-      <p><b>$20.000 por mes</b> o <b>$200.000 por año</b> (dos meses de regalo).</p>
-      <p class="muted" style="font-size:.92rem">Los primeros 10 talleres tienen 3 meses sin cargo. Para sus clientes la app es gratis y no pide registrarse.</p></div>
+    ${(() => { const ct = (window.COBROS || {}).talleres || {}; const precios = ct.activo || modoPrueba();
+      return precios ? `<div class="panel stack"><h3>Precio</h3>
+      ${modoPrueba() && !ct.activo ? `<p class="chip proxima" style="align-self:flex-start">Modo prueba: así se verá cuando se cobre</p>` : ""}
+      <p><b>${pesos(ct.precioMes)} por mes</b> o <b>${pesos(ct.precioAnio)} por año</b> (dos meses de regalo).</p>
+      <p class="muted" style="font-size:.92rem">Los primeros ${esc(ct.primeros)} talleres tienen ${esc(ct.mesesGratis)} meses sin cargo. Para sus clientes la app es gratis y no pide registrarse.</p></div>`
+      : `<div class="panel stack"><h3>Sin cargo durante el lanzamiento</h3>
+      <p>Sume su taller gratis y pruebe la app con sus clientes.</p>
+      <p class="muted" style="font-size:.92rem">Para sus clientes la app es gratis y no pide registrarse.</p></div>`; })()}
     ${c.whatsapp ? `<a class="btn ok big" href="${esc(waLink(c.whatsapp, txt))}" target="_blank" rel="noopener" data-ev="para-talleres/contacto">Quiero sumar mi taller</a>` : ""}
   </div>`;
 }
