@@ -318,6 +318,8 @@ a.volver{text-decoration:none;color:var(--ink)}
 .inst-av-ico{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok)}
 .inst-av-ico svg{width:34px;height:34px}
 .instalada-ok{margin:0;font-size:.9rem;color:var(--ok);font-weight:600;text-align:center}
+.sp-cartel{align-items:center;text-align:center}
+.sp-cartel ol{text-align:left}
 </style>
 
 <div class="app">
@@ -526,12 +528,12 @@ const ICON = {
 };
 
 /* ---------- Navegación ---------- */
-const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor","service-propio","repuestos"];
+const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor","service-propio","repuestos","cargar-service"];
 function ruta(){ const h = (location.hash||"").slice(1); if (!S.motor) return "motor"; return RUTAS.includes(h) ? h : "inicio"; }
 function render(){
   const r = ruta();
   const p = S.motor ? pendientes() : 0;
-  const pestana = (r === "diagnostico" || r === "ayuda") ? "inicio" : (r === "service-propio" || r === "repuestos") ? "mantenimiento" : r;
+  const pestana = (r === "diagnostico" || r === "ayuda") ? "inicio" : (r === "service-propio" || r === "repuestos" || r === "cargar-service") ? "mantenimiento" : r;
   $("#tabs").innerHTML = [["inicio","Inicio"],["mantenimiento","Service"],["motor","Mi motor"]].map(([k,l]) =>
     `<a href="#${k}" ${pestana===k?'aria-current="page"':''}>${ICON[k]}${l}${k==="mantenimiento"&&p?`<span class="badge">${p}</span>`:""}</a>`).join("");
   $("#top").innerHTML = S.motor
@@ -539,7 +541,7 @@ function render(){
        <a class="ayuda-btn" href="#ayuda">${ICON_TEL}Pedir ayuda</a>`
     : `<span class="motor"><small>${esc(TALLER.nombre)}</small><b>Auxilio Fuera de Borda</b></span>`;
   const v = $("#view");
-  v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : r === "service-propio" ? vServicio() : r === "repuestos" ? vRepuestos() : vInicio();
+  v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : r === "service-propio" ? vServicio() : r === "repuestos" ? vRepuestos() : r === "cargar-service" ? vCargar() : vInicio();
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
 }
 window.addEventListener("hashchange", () => { diag = null; rama = null; sp = null; repSel = null; render(); scrollTo(0,0); });
@@ -706,6 +708,7 @@ function vMant(){
     <div class="sp-entrada">
       <a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>Guía paso a paso para su motor</small></a>
       <a class="sp-btn sec" href="#repuestos"><b>Comprar los repuestos</b><small>La lista de lo que lleva su motor</small></a>
+      <a class="sp-btn sec" href="#cargar-service"><b>Me lo hizo el taller</b><small>Anote el service en 3 toques</small></a>
     </div>
     <div class="sumario"><div class="v"><b>${n("vencida")}</b><span class="eyebrow">Vencidas</span></div><div class="p"><b>${n("proxima")+n("sinregistro")}</b><span class="eyebrow">A revisar</span></div><div class="a"><b>${n("aldia")}</b><span class="eyebrow">Al día</span></div></div>
 
@@ -786,6 +789,22 @@ function datosBox(item, compacto){
 const NIVEL_SP = { facil:["simple","Fácil"], medio:["intermedio","Con herramientas"], riesgo:["mecanico","La más arriesgada"] };
 function vServicio(){
   const items = spItems();
+  // Juan (15/11/2026): cartel que aparece una sola vez y hay que aceptar.
+  let ok = false; try { ok = localStorage.getItem(KEY_SP + "-ok") === "si"; } catch(e){ ok = true; }
+  if (!ok) return `<div class="stack">
+      <a class="volver" href="#mantenimiento">‹ Service</a>
+      <section class="panel stack sp-cartel">
+        <span class="inst-av-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4 10-10"/></svg></span>
+        <h1>La app anota todo por usted</h1>
+        <ol class="pasos-num">
+          <li>Haga cada paso y toque "Listo, siguiente paso" recién cuando lo terminó.</li>
+          <li>Pasar al paso siguiente significa que completó esa parte del service.</li>
+          <li>Al terminar cada tarea, la app la anota sola en Service, con la fecha y las horas del motor.</li>
+          <li>Usted no tiene que cargar nada. Así usted y el taller saben qué se le hizo al motor.</li>
+        </ol>
+      </section>
+      <button class="btn ok big" data-a="sp-acepto">Entendido, empezar</button>
+    </div>`;
   if (!sp){
     const prog = spProgreso(), ts = tareas();
     const queda = SP.taller.map(id => ts.find(t => t.id === id)).filter(Boolean);
@@ -845,7 +864,6 @@ function vServicio(){
   }
   if (sp.paso === "fin"){
     const i = items.findIndex(x => x.id === it.id), sig = items[i+1];
-    const ult = it.tarea ? ultimo(it.tarea) : null, yaReg = ult && ult.fecha === hoy();
     if (it.id === "prueba") return `<div class="stack">${ladder}
       <section class="bien"><span class="eyebrow">Listo</span><h1>¡Service terminado!</h1>
       <p>Revise en la lista que estén todas las tareas marcadas. Si notó algo raro en la prueba, consulte al taller antes de salir a navegar.</p></section>
@@ -853,9 +871,8 @@ function vServicio(){
       <a class="btn sec" href="#mantenimiento">Ir a Service</a></div>`;
     return `<div class="stack">${ladder}
       <section class="bien"><span class="eyebrow">Tarea terminada</span><h1>${esc(it.titulo)}: listo</h1></section>
-      ${it.tarea ? (yaReg ? `<p class="notice info">Ya quedó anotada en el historial de hoy.</p>`
-        : `<button class="btn ok big" data-a="sp-registrar" data-id="${it.id}">Anotar en el historial (${Math.round(S.horas)} h)</button>`) : ""}
-      ${sig ? `<button class="btn ${it.tarea && !yaReg ? "sec" : "big"}" data-a="sp-abrir" data-id="${sig.id}">Seguir con: ${esc(sig.titulo)}</button>` : ""}
+      ${it.tarea ? `<p class="notice info">Quedó anotada en Service: hoy, a las ${Math.round(S.horas)} h. Así usted y el taller saben qué se le hizo al motor.</p>` : ""}
+      ${sig ? `<button class="btn big" data-a="sp-abrir" data-id="${sig.id}">Seguir con: ${esc(sig.titulo)}</button>` : ""}
       <button class="link" data-a="sp-lista">Volver a la lista</button></div>`;
   }
   const p = it.pasos[sp.paso], ultimoPaso = sp.paso === n - 1;
@@ -912,6 +929,28 @@ Motor: ${motorLinea()}
 ${xs.map(x => "- " + x.r.nombre + (x.det ? ": " + x.det : "")).join("\n")}
 ¿Me confirman precio y disponibilidad?
 (Pedido desde la app Auxilio Fuera de Borda)`;
+}
+
+/* ---------- Me lo hizo el taller: cargar un service en pocos toques (Juan, 15/11/2026) ---------- */
+// Ya vienen marcadas las tareas que le tocaban (vencidas, próximas o sin registro). El usuario solo confirma.
+function vCargar(){
+  const est = tareas().filter(t => !(t.cada && t.cada.usos)).map(t => ({ t, e: estado(t) }));
+  const marcar = x => ["vencida","proxima"].includes(x.e.k) || (x.e.k === "sinregistro" && !x.t.temporada);
+  return `<div class="stack">
+    <a class="volver" href="#mantenimiento">‹ Service</a>
+    <h1>Me lo hizo el taller</h1>
+    <p class="muted">Ya marcamos lo que le tocaba. Destilde lo que no le hicieron y toque Guardar.</p>
+    <form class="stack" id="f-taller">
+      <div class="grid2"><div class="field"><label for="ct-fecha">Fecha</label><input id="ct-fecha" type="date" value="${hoy()}" max="${hoy()}" required></div>
+      <div class="field"><label for="ct-horas">Horas del motor</label><input id="ct-horas" type="number" inputmode="decimal" min="0" step="0.5" value="${S.horas}"></div></div>
+      <div class="row" style="justify-content:space-between"><h2 style="font-size:1.15rem">¿Qué le hicieron?</h2><button type="button" class="link" data-a="ct-todas" style="padding:4px">Marcar todas</button></div>
+      <div class="panel rep-lista">${est.map(x => `<label class="rep">
+        <input type="checkbox" name="ct" value="${x.t.id}" ${marcar(x) ? "checked" : ""}>
+        <span><b>${esc(x.t.nombre)}</b><small>${esc(x.e.txt)}</small></span></label>`).join("")}</div>
+      <div class="field"><label for="ct-taller">Taller (opcional)</label><input id="ct-taller" type="text" value="${esc(TALLER.nombre)}"></div>
+      <button class="btn ok big">Guardar el service</button>
+    </form>
+  </div>`;
 }
 
 /* ---------- Vista: mi motor ---------- */
@@ -1000,11 +1039,19 @@ document.addEventListener("click", ev => {
   else if (a === "sp-intro"){ sp.paso = "intro"; render(); scrollTo(0,0); }
   else if (a === "sp-riesgo-ok"){ sp.paso = "intro"; contar("service-propio/carburador-acepta-riesgo"); render(); scrollTo(0,0); }
   else if (a === "sp-paso"){ sp.paso = parseInt(b.dataset.n, 10); render(); scrollTo(0,0); }
-  else if (a === "sp-terminar"){ spMarcar(sp.id); contar("service-propio-fin/" + sp.id); sp.paso = "fin"; render(); scrollTo(0,0); }
+  else if (a === "sp-terminar"){
+    spMarcar(sp.id); contar("service-propio-fin/" + sp.id);
+    // Juan (15/11/2026): al terminar la tarea con la guía, queda anotada sola en Service.
+    const it = spItems().find(x => x.id === sp.id), u = it && it.tarea ? ultimo(it.tarea) : null;
+    if (it && it.tarea && !(u && u.fecha === hoy())){ S.registros.push({ tipo:"tarea", tarea:it.tarea, fecha:hoy(), horas:S.horas, nota:"Lo hizo el dueño con la guía de la app" }); save(); }
+    sp.paso = "fin"; render(); scrollTo(0,0);
+  }
   else if (a === "sp-registrar"){
     const it = spItems().find(x => x.id === b.dataset.id);
     if (it && it.tarea){ S.registros.push({ tipo:"tarea", tarea:it.tarea, fecha:hoy(), horas:S.horas, nota:"Lo hizo el dueño con la guía de la app" }); save(); toast("Anotado en el historial"); render(); }
   }
+  else if (a === "sp-acepto"){ try { localStorage.setItem(KEY_SP + "-ok", "si"); } catch(e){} contar("service-propio/acepto-aviso"); render(); scrollTo(0,0); }
+  else if (a === "ct-todas"){ document.querySelectorAll('input[name="ct"]').forEach(c => c.checked = true); }
   else if (a === "sp-reset"){ try { localStorage.removeItem(KEY_SP); } catch(e){} render(); }
   else if (a === "pedir-repuestos"){
     const xs = repLista().filter(x => repSel && repSel.has(x.r.id));
@@ -1028,6 +1075,17 @@ document.addEventListener("submit", ev => {
   ev.preventDefault();
   const f = ev.target;
   if (f.id === "f-horas"){ const h = parseFloat($("#in-horas").value); if (h >= 0){ S.horas = h; save(); toast("Horas actualizadas"); render(); } }
+  else if (f.id === "f-taller"){
+    const ids = [...f.querySelectorAll('input[name="ct"]:checked')].map(c => c.value);
+    if (!ids.length){ toast("Marque al menos una tarea"); return; }
+    const fecha = $("#ct-fecha").value || hoy(), h = parseFloat($("#ct-horas").value), tal = $("#ct-taller").value.trim();
+    const horas = h >= 0 ? h : S.horas;
+    ids.forEach(id => S.registros.push({ tipo:"tarea", tarea:id, fecha, horas, nota:"Lo hizo el taller" + (tal ? ": " + tal : "") }));
+    if (horas > S.horas) S.horas = horas;
+    save(); contar("service-taller/" + ids.length);
+    toast(ids.length === 1 ? "Tarea guardada" : ids.length + " tareas guardadas");
+    location.hash = "mantenimiento";
+  }
   else if (f.id === "f-reg"){
     S.registros.push({ tipo:"tarea", tarea:f.dataset.id, fecha:$("#r-fecha").value || hoy(), horas: parseFloat($("#r-horas").value) || 0, nota:$("#r-nota").value.trim() });
     const h = parseFloat($("#r-horas").value); if (h > S.horas) S.horas = h;
