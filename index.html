@@ -864,8 +864,15 @@ function numeroPedido(){
   if (!S.pedido){ let n = ""; for (let i = 0; i < 8; i++) n += Math.floor(Math.random() * 10); if (n[0] === "0") n = "1" + n.slice(1); S.pedido = n; save(); }
   return S.pedido.slice(0,4) + "-" + S.pedido.slice(4);
 }
-function spPagado(){ return !!(S.compras && S.compras.sp && CB.codigo && S.compras.sp === CB.codigo(S.pedido, "sp")); }
-function spBloqueado(){ return !!(CB.servicePropio && CB.servicePropio.activo) && !spPagado(); }
+const KEY_PRUEBA = KEY + "-prueba";
+(function(){ try { const q = new URLSearchParams(location.search).get("prueba"); if (q === "1") localStorage.setItem(KEY_PRUEBA, "si"); else if (q === "0") localStorage.removeItem(KEY_PRUEBA); } catch(e){} })();
+function modoPrueba(){ try { return !!(CB.servicePropio && CB.servicePropio.codigoPrueba) && localStorage.getItem(KEY_PRUEBA) === "si"; } catch(e){ return false; } }
+function spPagado(){
+  const c = S.compras && S.compras.sp; if (!c) return false;
+  if (modoPrueba() && c === CB.servicePropio.codigoPrueba) return true;
+  return !!(CB.codigo && c === CB.codigo(S.pedido, "sp"));
+}
+function spBloqueado(){ return !!(CB.servicePropio && (CB.servicePropio.activo || modoPrueba())) && !spPagado(); }
 const pesos = n => "$" + Number(n).toLocaleString("es-AR");
 function vComprar(){
   const c = CB.servicePropio, ped = numeroPedido(), ws = c.whatsapp || (TT.contacto || {}).whatsapp || "";
@@ -874,6 +881,7 @@ function vComprar(){
   const txtComprobante = `Hola, ya pagué la guía "Haga el service usted mismo". Le mando el comprobante.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}`;
   return `<div class="stack">
     <a class="volver" href="#mantenimiento">‹ Service</a>
+    ${modoPrueba() ? `<div class="notice info"><strong>Modo prueba</strong><span>No pague nada. Para activar la guía, use el código <b>${esc(CB.servicePropio.codigoPrueba)}</b>.</span><button class="link" data-a="salir-prueba" style="text-align:left;padding:6px 0 0">Salir del modo prueba</button></div>` : ""}
     <span class="eyebrow">Haga el service usted mismo</span>
     <h1>Por lo que cuesta un service, aprenda a hacerlo usted</h1>
     <p>Por aproximadamente el costo de un service de taller, se lleva la guía completa para su ${esc(motorLinea())}: todo lo que necesita saber para hacerlo con sus propias manos, esta vez y todas las que vengan.</p>
@@ -1255,6 +1263,12 @@ document.addEventListener("click", ev => {
     const t = taller(); toast(t ? "Su taller: " + t.nombre : "Listo: sin taller");
     location.hash = S.motor ? "inicio" : "motor";
   }
+  else if (a === "salir-prueba"){
+    try { localStorage.removeItem(KEY_PRUEBA); } catch(e){}
+    if (S.compras && S.compras.sp === CB.servicePropio.codigoPrueba){ delete S.compras.sp; save(); }
+    try { const q = new URLSearchParams(location.search); q.delete("prueba"); const qs = q.toString(); history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash); } catch(e){}
+    toast("Salió del modo prueba"); location.hash = "mantenimiento"; render();
+  }
   else if (a === "tarea"){ abierta = abierta === b.dataset.id ? null : b.dataset.id; registrando = null; render(); }
   else if (a === "registrar"){ registrando = b.dataset.id; render(); }
   else if (a === "cancelar-reg"){ registrando = null; render(); }
@@ -1283,7 +1297,8 @@ document.addEventListener("submit", ev => {
   }
   else if (f.id === "f-codigo"){
     const c = ($("#in-codigo").value || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-    if (CB.codigo && c === CB.codigo(S.pedido, "sp")){ S.compras = Object.assign({}, S.compras, { sp: c }); save(); contar("compra/sp/activada"); toast("¡Listo! La guía quedó activada"); render(); scrollTo(0,0); }
+    const prueba = modoPrueba() && c === String(CB.servicePropio.codigoPrueba).toUpperCase();
+    if (prueba || (CB.codigo && c === CB.codigo(S.pedido, "sp"))){ S.compras = Object.assign({}, S.compras, { sp: c }); save(); contar("compra/sp/activada"); toast("¡Listo! La guía quedó activada"); render(); scrollTo(0,0); }
     else toast("El código no coincide. Revíselo o escríbanos por WhatsApp.");
   }
   else if (f.id === "f-reg"){

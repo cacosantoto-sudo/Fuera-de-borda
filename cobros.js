@@ -15,7 +15,12 @@ window.COBROS = {
     precio: 150000,                // en pesos
     usd: 99,                       // referencia en dólares
     linkPago: "",                  // link de pago de Mercado Pago con monto fijo. Vacío = se coordina por WhatsApp.
-    whatsapp: "5493425217781"      // a dónde llegan los comprobantes
+    whatsapp: "5493425217781",     // a dónde llegan los comprobantes
+    // MODO PRUEBA (Juan, 15/11/2026): con el cobro apagado, quien abre la app con el link
+    //   https://cacosantoto-sudo.github.io/Fuera-de-borda/?prueba=1
+    // ve la pantalla de compra y puede activar la guía con este código, sin pagar.
+    // Los demás usuarios no ven nada distinto. Para salir: el botón de la pantalla, o ?prueba=0.
+    codigoPrueba: "PRUEBA"
   }
 };
 /* Código de activación: sale del número de pedido. No cambiar la "sal" una vez que se vendió,
