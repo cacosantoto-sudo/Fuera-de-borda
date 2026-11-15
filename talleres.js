@@ -15,6 +15,8 @@
      logo          (opcional) archivo en la carpeta logos/, cuadrado (PNG o SVG)
      repuestos     true = muestra "Comprar los repuestos" con pedido a su WhatsApp
      servicePropio true = muestra "Haga el service usted mismo"
+     guiaIncluida  true = el taller les regala la guía a TODOS sus clientes (no ven nada bloqueado).
+                   Para regalársela a un cliente solo, el taller le da un código desde su kit (kit.html).
      muestra       true = taller de demostración: no aparece en la lista, solo por link
    ===================================================================== */
 window.TALLERES = {
@@ -25,7 +27,7 @@ window.TALLERES = {
   lista: [
     { codigo: "scotto", nombre: "Scotto Mecánica Náutica", ciudad: "Santa Fe",
       tel: "+5493425217781", whatsapp: "5493425217781", ver: "342 521-7781",
-      logo: "", repuestos: true, servicePropio: true, activo: true },
+      logo: "", repuestos: true, servicePropio: true, guiaIncluida: false, activo: true },
 
     // Taller de muestra para enseñarle la app a un taller interesado (los botones van al teléfono de Juan).
     { codigo: "muestra", nombre: "Náutica del Puerto (taller de muestra)", ciudad: "Rosario",

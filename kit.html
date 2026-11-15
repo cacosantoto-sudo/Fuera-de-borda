@@ -46,6 +46,7 @@ textarea{width:100%;font:1rem Inter,sans-serif;border:1px solid var(--line);bord
 <body>
 <main id="kit"></main>
 <script src="talleres.js"></script>
+<script src="cobros.js"></script>
 <script src="qrcode.js"></script>
 <script>
 (function(){
@@ -73,7 +74,10 @@ textarea{width:100%;font:1rem Inter,sans-serif;border:1px solid var(--line);bord
       '<div class="fila"><button class="btn" data-copiar="link">Copiar el link</button><a class="btn sec" href="' + esc(link) + '" target="_blank" rel="noopener">Ver cómo la ve su cliente</a></div></div>' +
     '<div class="card no-print"><h2>2. Mensaje para sus clientes</h2><p class="muted">Cópielo y mándelo por WhatsApp a sus clientes, o a una lista de difusión.</p><textarea id="msj">' + esc(mensaje) + '</textarea>' +
       '<div class="fila"><button class="btn" data-copiar="msj">Copiar el mensaje</button><a class="btn sec" href="https://wa.me/?text=' + encodeURIComponent(mensaje) + '" target="_blank" rel="noopener">Abrir WhatsApp</a></div></div>' +
-    '<div class="card"><h2 class="no-print">3. Calcos para imprimir</h2><p class="muted no-print">Imprímalas en papel autoadhesivo y péguelas en la tapa del motor, en el tablero de la lancha o en el mostrador. Cada hoja trae 4.</p>' +
+    '<div class="card no-print"><h2>3. Regalarle la guía a un cliente</h2><p class="muted">"Haga el service usted mismo" se paga. Si quiere regalársela a un cliente, pídale el número de pedido que le muestra la app (Service, Haga el service usted mismo) y mándele este código.</p>' +
+      '<input id="ped" inputmode="numeric" placeholder="Número de pedido (8 números)" style="font:600 1.2rem Inter,sans-serif;padding:12px;border:1px solid var(--line);border-radius:12px;width:100%">' +
+      '<p class="link" id="cod" style="margin-top:10px;font-size:1.6rem;letter-spacing:.15em;text-align:center">——————</p></div>' +
+    '<div class="card"><h2 class="no-print">4. Calcos para imprimir</h2><p class="muted no-print">Imprímalas en papel autoadhesivo y péguelas en la tapa del motor, en el tablero de la lancha o en el mostrador. Cada hoja trae 4.</p>' +
       '<div class="fila no-print" style="margin-bottom:16px"><button class="btn" onclick="print()">Imprimir calcos</button></div>' +
       '<div class="calcos">' + calco() + calco() + calco() + calco() + '</div></div>';
   var qrs = main.querySelectorAll(".qr");
@@ -81,6 +85,8 @@ textarea{width:100%;font:1rem Inter,sans-serif;border:1px solid var(--line);bord
   try { var q = qrcode(0, "M"); q.addData(link); q.make(); svgQR = q.createSvgTag({ cellSize: 6, margin: 2, scalable: true }); } catch(e){}
   if (svgQR){ for (var i = 0; i < qrs.length; i++) qrs[i].innerHTML = svgQR; }
   else { for (var j = 0; j < qrs.length; j++) qrs[j].innerHTML = '<p class="link">' + esc(link) + '</p>'; }
+  var ped = document.getElementById("ped");
+  ped.addEventListener("input", function(){ var n = ped.value.replace(/\D/g, ""); document.getElementById("cod").textContent = (n.length === 8 && window.COBROS) ? COBROS.codigo(n, "sp") : "——————"; });
   main.addEventListener("click", function(e){
     var b = e.target.closest("[data-copiar]"); if (!b) return;
     var el = document.getElementById(b.getAttribute("data-copiar")), txt = el.value || el.textContent;

@@ -320,6 +320,15 @@ a.volver{text-decoration:none;color:var(--ink)}
 .instalada-ok{margin:0;font-size:.9rem;color:var(--ok);font-weight:600;text-align:center}
 .sp-cartel{align-items:center;text-align:center}
 .sp-cartel ol{text-align:left}
+/* Contenido bloqueado en cada tarea (15/11/2026) */
+.bloqueado{position:relative;border-radius:18px;overflow:hidden}
+.borroso{filter:blur(6px);user-select:none;pointer-events:none;opacity:.75}
+.candado{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;padding:14px;background:rgba(255,255,255,.35)}
+.candado b{font-size:1.05rem;line-height:1.25}
+.candado small{color:var(--muted)}
+.candado .btn{margin-top:8px;min-height:48px;padding:12px 16px}
+.candado-ico{width:40px;height:40px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:var(--mar,#0a6fae);color:#fff}
+.candado-ico svg{width:22px;height:22px}
 /* Compra de la guía (15/11/2026) */
 .precio-card{display:flex;flex-direction:column;align-items:center;gap:2px;padding:18px;border-radius:24px;background:linear-gradient(160deg,#1592d6,#0a6fae);color:#fff;box-shadow:0 12px 26px rgba(10,111,174,.28)}
 .precio-card small{font-size:.95rem;opacity:.9}
@@ -814,9 +823,9 @@ function tareaHTML(t, e){
     ${open ? `<div class="det">
       <p>${esc(t.porque)}</p>${t.notaMarca?`<p class="notice info">${esc(t.notaMarca)}</p>`:""}${cc.primeraHoras?`<p class="muted" style="font-size:.9rem">La primera revisión (a las ${cc.primeraHoras} h) es solo para motores nuevos, 0 horas. En un motor usado, siga el intervalo normal.</p>`:""}
       <div class="row"><span class="chip info">${esc(freq)}</span>${t.segun?`<span class="chip aldia">Según ${esc(t.segun)}</span>`:(t.cada&&!t.cada.usos?`<span class="chip proxima">Intervalo general</span>`:"")}${t.quien==="mecanico"?`<span class="chip mecanico">Tarea de taller</span>`:`<span class="chip simple">La puede hacer usted</span>`}</div>
-      <ol>${t.pasos.map(p=>`<li>${esc(p)}</li>`).join("")}</ol>
-      ${spVisible() && spItems().some(i => i.tarea === t.id) ? `<button class="btn sec" data-a="sp-abrir" data-id="${spItems().find(i => i.tarea === t.id).id}" data-ir="1">Ver cómo hacerlo paso a paso</button>` : ""}
-      ${t.materiales && t.materiales.length ? `<p><strong>Materiales:</strong> ${t.materiales.map(esc).join(", ")}</p>` : ""}
+      ${spBloqueado() ? tareaBloqueada(t) : `<ol>${t.pasos.map(p=>`<li>${esc(p)}</li>`).join("")}</ol>`}
+      ${!spBloqueado() && spVisible() && spItems().some(i => i.tarea === t.id) ? `<button class="btn sec" data-a="sp-abrir" data-id="${spItems().find(i => i.tarea === t.id).id}" data-ir="1">Ver cómo hacerlo paso a paso</button>` : ""}
+      ${!spBloqueado() && t.materiales && t.materiales.length ? `<p><strong>Materiales:</strong> ${t.materiales.map(esc).join(", ")}</p>` : ""}
       ${["vencida","proxima","sinregistro"].includes(e.k) ? aTurno([t], "turno/" + t.id, t.quien==="mecanico" ? "Pedir turno al taller" : "Prefiero que lo haga el taller: pedir turno") : ""}
       ${u ? `<p class="muted" style="font-size:.9rem">Último registro: ${esc(fmtFecha(u.fecha))}${u.horas!=null?` a las ${Math.round(u.horas)} h`:""}.</p>` : ""}
       ${reg ? `<form class="stack" id="f-reg" data-id="${t.id}">
@@ -868,12 +877,26 @@ const KEY_PRUEBA = KEY + "-prueba";
 (function(){ try { const q = new URLSearchParams(location.search).get("prueba"); if (q === "1") localStorage.setItem(KEY_PRUEBA, "si"); else if (q === "0") localStorage.removeItem(KEY_PRUEBA); } catch(e){} })();
 function modoPrueba(){ try { return !!(CB.servicePropio && CB.servicePropio.codigoPrueba) && localStorage.getItem(KEY_PRUEBA) === "si"; } catch(e){ return false; } }
 function spPagado(){
+  const t = taller(); if (t && t.guiaIncluida) return true;
   const c = S.compras && S.compras.sp; if (!c) return false;
   if (modoPrueba() && c === CB.servicePropio.codigoPrueba) return true;
   return !!(CB.codigo && c === CB.codigo(S.pedido, "sp"));
 }
 function spBloqueado(){ return !!(CB.servicePropio && (CB.servicePropio.activo || modoPrueba())) && !spPagado(); }
 const pesos = n => "$" + Number(n).toLocaleString("es-AR");
+// Juan (15/11/2026): sin la guía paga, cada tarea muestra solo qué hay que hacer. Cómo se hace, herramientas
+// y materiales se ven borrosos. El texto borroso es de relleno: el contenido real no llega a la pantalla.
+const RELLENO = ["Afloje con cuidado y revise que no quede nada suelto antes de seguir.", "Use la herramienta justa y apriete sin forzar la rosca.", "Limpie la zona, mire el estado de la pieza y cambie lo que esté gastado.", "Ponga la cantidad que indica el manual y verifique el nivel al final.", "Vuelva a armar en el orden inverso y pruebe el motor con agua."];
+function tareaBloqueada(t){
+  const n = Math.max(3, Math.min(6, (t.pasos || []).length));
+  return `<div class="bloqueado">
+    <div class="borroso" aria-hidden="true"><ol>${Array.from({ length: n }, (_, i) => `<li>${RELLENO[i % RELLENO.length]}</li>`).join("")}</ol><p><strong>Herramientas y materiales:</strong> llave, juntas, aceite, grasa, trapo limpio.</p></div>
+    <div class="candado"><span class="candado-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+      <b>Cómo se hace, con qué herramientas y qué materiales</b>
+      <small>Incluido en "Haga el service usted mismo"</small>
+      <a class="btn ok" href="#service-propio" data-ev="compra/sp/ver-desde-tarea/${esc(t.id)}">Ver cómo desbloquearlo</a></div>
+  </div>`;
+}
 function vComprar(){
   const c = CB.servicePropio, ped = numeroPedido(), ws = c.whatsapp || (TT.contacto || {}).whatsapp || "";
   const nombres = spItems().filter(i => i.tarea).map(i => i.titulo).filter(Boolean);
@@ -887,6 +910,7 @@ function vComprar(){
     <p>Por aproximadamente el costo de un service de taller, se lleva la guía completa para su ${esc(motorLinea())}: todo lo que necesita saber para hacerlo con sus propias manos, esta vez y todas las que vengan.</p>
     <div class="panel stack"><h3>Qué incluye</h3>
       <ul class="lista-para">
+        <li>Cómo se hace cada tarea, con qué herramientas y qué materiales.</li>
         <li>Paso a paso de ${nombres.length ? nombres.length + " tareas del service: " + esc(nombres.join(", ").toLowerCase()) : "todo el service preventivo de su motor"}.</li>
         <li>Los datos de su manual: aceite, cantidades, bujías, luz y ajustes.</li>
         <li>Una cosa por pantalla, con avisos de seguridad y de cuándo conviene dejárselo al mecánico.</li>
@@ -898,7 +922,7 @@ function vComprar(){
       ? `<a class="btn ok big" href="${esc(c.linkPago)}" target="_blank" rel="noopener" data-ev="compra/sp/mercadopago">Pagar con Mercado Pago</a>`
       : `<a class="btn ok big" href="${esc(waLink(ws, txtCompra))}" target="_blank" rel="noopener" data-ev="compra/sp/whatsapp">Comprar por WhatsApp</a>`}
     <div class="panel stack"><h3>¿Ya pagó?</h3>
-      <p class="muted" style="font-size:.95rem">Mande el comprobante por WhatsApp. Le respondemos con su código de activación.</p>
+      <p class="muted" style="font-size:.95rem">Mande el comprobante por WhatsApp. Le respondemos con su código de activación. Si su taller se la regala, pídale el código a su taller con este mismo número.</p>
       <p class="pedido">Su número de pedido: <b>${esc(ped)}</b></p>
       <a class="btn sec" href="${esc(waLink(ws, txtComprobante))}" target="_blank" rel="noopener" data-ev="compra/sp/comprobante">Mandar el comprobante</a>
       <form class="stack" id="f-codigo">
