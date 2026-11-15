@@ -296,6 +296,12 @@ h1{color:var(--azul)}
 .btn.sec,.btn.ghost{background:var(--cromo);color:#0d1b33}
 .seguro-chico{margin:0;font-size:.85rem;line-height:1.35;color:var(--muted);border-left:3px solid var(--line);padding:2px 0 2px 10px}
 .seguro-chico a{color:inherit;font-weight:700}
+.rama-btn{display:flex;align-items:center;gap:16px;width:100%;min-height:150px;padding:20px;border:0;cursor:pointer;text-align:left;background:var(--cabina,var(--ink));color:#fff;font:inherit}
+.rama-btn.falla{background:var(--placa,var(--ink))}
+.rama-btn svg{width:56px;height:56px;flex-shrink:0}
+.rama-btn b{display:block;font-family:var(--display);font-weight:900;font-style:italic;text-transform:uppercase;font-size:1.9rem;line-height:1.05}
+.rama-btn small{display:block;margin-top:6px;font-size:1rem;opacity:.9}
+.rama-btn:active{transform:translateY(2px)}
 </style>
 
 <div class="app">
@@ -335,6 +341,7 @@ let S = load();
 function load(){ try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.motor){ if (s.motor.catalogoId === "ejemplo-yamaha-40-2t"){ s.motor.catalogoId = "yamaha-40-2t"; s.motor.modelo = "40 HP 2T"; } if (s.motor.catalogoId === "mercury-40c-2t-jp"){ s.motor.catalogoId = "mercury-40-2t-jp"; s.motor.modelo = "40 HP 2T japonés"; } return s; } } catch(e){} return { motor:null, horas:0, registros:[] }; }
 function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 let diag = null;        // diagnóstico en curso
+let rama = null;        // "no" (no arranca) o "falla" (arranca pero anda mal); null = elegir
 let abierta = null;     // tarea desplegada
 let registrando = null; // tarea en registro
 
@@ -508,7 +515,7 @@ function render(){
   v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : vInicio();
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
 }
-window.addEventListener("hashchange", () => { diag = null; render(); scrollTo(0,0); });
+window.addEventListener("hashchange", () => { diag = null; rama = null; render(); scrollTo(0,0); });
 
 /* ---------- Vista: inicio ---------- */
 function vInicio(){
@@ -557,19 +564,28 @@ function vAyuda(){
 
 /* ---------- Vista: diagnóstico ---------- */
 function vDiag(){
-  if (!diag){
+  if (!diag && !rama){
     return `<div class="stack">
       <h1>¿Qué le pasa al motor?</h1>
-      <p class="muted">Toque lo que le pasa. Le decimos qué hacer, paso a paso.</p>
       ${avisoChico()}
-      ${gruposDiag().map(([g, ds]) => `
+      <button class="rama-btn" data-a="rama" data-r="no">${DIBUJO.llave || DIBUJO.general}<span><b>No arranca</b><small>Quiero arrancar y no prende</small></span></button>
+      <button class="rama-btn falla" data-a="rama" data-r="falla">${DIBUJO.general}<span><b>Arranca pero falla</b><small>Anda mal, se apaga, hace ruido, recalienta…</small></span></button>
+      ${ficha() ? "" : `<div class="notice info">Su motor todavía no tiene ficha propia. Le mostramos el diagnóstico general para motores ${esc(S.motor.tiempos)}.</div>`}
+    </div>`;
+  }
+  if (!diag){
+    const grupos = gruposRama(rama);
+    return `<div class="stack">
+      <button class="volver" data-a="volver-ramas">‹ Volver</button>
+      <h1>${rama === "no" ? "No arranca" : "Arranca pero falla"}</h1>
+      <p class="muted">${rama === "no" ? "¿Qué pasa cuando quiere arrancar? Empiece por la primera." : "Toque lo que le pasa. Le decimos qué hacer, paso a paso."}</p>
+      ${grupos.map(([g, ds]) => `
       ${g ? `<div class="section-title"><h2>${esc(g)}</h2></div>` : ""}
       <div class="mosaico">${ds.map(d => `
         <button class="sintoma ${d.urgente ? "urgente" : ""}" data-a="sintoma" data-id="${d.id}">
           ${DIBUJO[d.icono] || DIBUJO.general}
-          <span><b>${esc(d.titulo)}</b>${d.urgente ? `<br><span class="apague">Apague el motor</span>` : ""}</span>
+          <span><b>${esc(RAMA_TITULO[d.id] || d.titulo)}</b>${d.urgente ? `<br><span class="apague">Apague el motor</span>` : ""}</span>
         </button>`).join("")}</div>`).join("")}
-      ${ficha() ? "" : `<div class="notice info">Su motor todavía no tiene ficha propia. Le mostramos el diagnóstico general para motores ${esc(S.motor.tiempos)}.</div>`}
     </div>`;
   }
   const d = diagnosticos().find(x => x.id === diag.id);
@@ -611,6 +627,20 @@ function vDiag(){
       <button class="btn big" data-a="siguiente">No, sigue igual</button>
     </div>
   </div>`;
+}
+/* Juan (15/11/2026): primero dos caminos, "No arranca" y "Arranca pero falla"; después los síntomas ordenados. */
+const RAMA_NO = ["no-arranca","no-gira","piola","piola-cortada","llave-roja","sin-nafta","motor-al-agua"];
+const RAMA_TITULO = { "no-arranca":"Gira pero no prende" };
+function gruposRama(r){
+  const ds = diagnosticos();
+  if (r === "no"){
+    const lista = RAMA_NO.map(id => ds.find(d => d.id === id)).filter(Boolean);
+    return lista.length ? [["", lista]] : [];
+  }
+  const orden = ["Temperatura y alarmas","En marcha","Hélice y marchas","Golpes y caídas al agua","Nafta y aceite","Batería y trim"];
+  const pos = g => { const i = orden.indexOf(g); return i < 0 ? 99 : i; };
+  return gruposDiag().map(([g, xs]) => [g === "Golpes y caídas al agua" ? "Golpes" : g, xs.filter(d => !RAMA_NO.includes(d.id)), pos(g)])
+    .filter(x => x[1].length).sort((a, b) => a[2] - b[2]).map(x => [x[0], x[1]]);
 }
 function gruposDiag(){
   const ds = diagnosticos(), orden = (D.GRUPOS_DIAGNOSTICO || []).slice();
@@ -753,6 +783,8 @@ document.addEventListener("click", ev => {
   const a = b.dataset.a;
   if (a === "sintoma"){ diag = { id:b.dataset.id, paso:0 }; render(); scrollTo(0,0); }
   else if (a === "volver-sintomas"){ diag = null; render(); }
+  else if (a === "rama"){ rama = b.dataset.r; diag = null; render(); scrollTo(0,0); }
+  else if (a === "volver-ramas"){ rama = null; diag = null; render(); scrollTo(0,0); }
   else if (a === "siguiente"){ diag.paso++; render(); scrollTo(0,0); }
   else if (a === "anterior"){ diag.paso--; render(); scrollTo(0,0); }
   else if (a === "resuelto"){ diag.fin = "resuelto"; render(); }
