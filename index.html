@@ -281,6 +281,37 @@ h3{font-weight:700}
 .rama-btn{border-radius:28px;min-height:140px;background:linear-gradient(160deg,#ff7a33,#ff4d14);box-shadow:0 14px 30px rgba(255,77,20,.32)}
 .rama-btn.falla{background:linear-gradient(160deg,#1592d6,#0a6fae);box-shadow:0 14px 30px rgba(10,111,174,.3)}
 .rama-btn b{font-family:var(--display);font-style:normal;text-transform:none;font-weight:800;letter-spacing:-.03em;font-size:2rem}
+/* Haga el service usted mismo + repuestos (15/11/2026) */
+.sp-entrada{display:grid;gap:12px}
+.sp-btn{display:flex;flex-direction:column;gap:2px;text-decoration:none;border-radius:24px;padding:18px 20px;background:linear-gradient(160deg,#1592d6,#0a6fae);color:#fff;box-shadow:0 12px 26px rgba(10,111,174,.28)}
+.sp-btn b{font-size:1.3rem;letter-spacing:-.01em}
+.sp-btn small{font-size:.95rem;opacity:.9}
+.sp-btn.sec{background:var(--surface);color:var(--ink);border:1px solid var(--vidrio-borde);box-shadow:var(--sombra);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.sp-btn.sec small{color:var(--muted);opacity:1}
+.sp-lista{display:flex;flex-direction:column;gap:10px}
+.sp-item{display:flex;gap:14px;align-items:flex-start;width:100%;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--vidrio-borde);border-radius:24px;padding:14px 16px;box-shadow:var(--sombra);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.sp-item .num{flex-shrink:0;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:rgba(10,132,198,.12);color:var(--mar)}
+.sp-item.hecho .num{background:var(--ok);color:#fff}
+.sp-item.riesgo{border:2px solid var(--sos)}
+.sp-item.riesgo .num{background:var(--sos-soft);color:var(--sos)}
+.sp-item .t{display:flex;flex-direction:column;gap:2px;min-width:0}
+.sp-item b{font-size:1.12rem}
+.sp-item small{color:var(--muted);font-size:.95rem}
+.sp-taller,.sp-mat{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.sp-taller li{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sp-mat li{padding-left:18px;position:relative}
+.sp-mat li::before{content:"";position:absolute;left:2px;top:.55em;width:7px;height:7px;border-radius:50%;background:var(--mar)}
+.datos-motor dl{margin:8px 0 0;display:flex;flex-direction:column;gap:8px}
+.datos-motor dl div{display:flex;flex-direction:column}
+.datos-motor dt{font-size:.85rem;color:var(--muted)}
+.datos-motor dd{margin:0;font-weight:700;font-size:1.08rem}
+.rep-lista{display:flex;flex-direction:column;padding:6px 14px}
+.rep{display:flex;gap:14px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.rep:last-child{border-bottom:0}
+.rep input{width:26px;height:26px;flex-shrink:0;margin-top:2px;accent-color:var(--ok)}
+.rep span{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.rep small{color:var(--muted);font-size:.93rem}
+a.volver{text-decoration:none;color:var(--ink)}
 </style>
 
 <div class="app">
@@ -304,6 +335,7 @@ h3{font-weight:700}
 <script src="datos-motores.js"></script>
 <script src="diagnosticos.js"></script>
 <script src="identificar-anio.js"></script>
+<script src="service-propio.js"></script>
 <script>
 (function(){
 "use strict";
@@ -478,12 +510,12 @@ const ICON = {
 };
 
 /* ---------- Navegación ---------- */
-const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor"];
+const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor","service-propio","repuestos"];
 function ruta(){ const h = (location.hash||"").slice(1); if (!S.motor) return "motor"; return RUTAS.includes(h) ? h : "inicio"; }
 function render(){
   const r = ruta();
   const p = S.motor ? pendientes() : 0;
-  const pestana = (r === "diagnostico" || r === "ayuda") ? "inicio" : r;
+  const pestana = (r === "diagnostico" || r === "ayuda") ? "inicio" : (r === "service-propio" || r === "repuestos") ? "mantenimiento" : r;
   $("#tabs").innerHTML = [["inicio","Inicio"],["mantenimiento","Service"],["motor","Mi motor"]].map(([k,l]) =>
     `<a href="#${k}" ${pestana===k?'aria-current="page"':''}>${ICON[k]}${l}${k==="mantenimiento"&&p?`<span class="badge">${p}</span>`:""}</a>`).join("");
   $("#top").innerHTML = S.motor
@@ -491,10 +523,10 @@ function render(){
        <a class="ayuda-btn" href="#ayuda">${ICON_TEL}Pedir ayuda</a>`
     : `<span class="motor"><small>${esc(TALLER.nombre)}</small><b>Auxilio Fuera de Borda</b></span>`;
   const v = $("#view");
-  v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : vInicio();
+  v.innerHTML = r === "motor" ? vMotor() : r === "mantenimiento" ? vMant() : r === "ayuda" ? vAyuda() : r === "diagnostico" ? vDiag() : r === "service-propio" ? vServicio() : r === "repuestos" ? vRepuestos() : vInicio();
   v.classList.remove("view"); void v.offsetWidth; v.classList.add("view");
 }
-window.addEventListener("hashchange", () => { diag = null; rama = null; render(); scrollTo(0,0); });
+window.addEventListener("hashchange", () => { diag = null; rama = null; sp = null; repSel = null; render(); scrollTo(0,0); });
 
 /* ---------- Vista: inicio ---------- */
 function vInicio(){
@@ -654,6 +686,10 @@ function vMant(){
       return pend.length ? `<div class="panel stack"><h3>Le toca service</h3>
       <p class="muted" style="font-size:.92rem">${pend.length === 1 ? "Hay 1 tarea vencida o próxima" : "Hay "+pend.length+" tareas vencidas o próximas"}. Pida turno y llévelo al taller antes de la próxima salida.</p>
       <a class="btn ok" href="${esc(linkWhatsapp(textoTurno(pend)))}" target="_blank" rel="noopener" data-ev="turno/todo">Pedir turno por WhatsApp</a></div>` : ""; })()}
+    <div class="sp-entrada">
+      <a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>Guía paso a paso para su motor</small></a>
+      <a class="sp-btn sec" href="#repuestos"><b>Comprar los repuestos</b><small>La lista de lo que lleva su motor</small></a>
+    </div>
     <div class="sumario"><div class="v"><b>${n("vencida")}</b><span class="eyebrow">Vencidas</span></div><div class="p"><b>${n("proxima")+n("sinregistro")}</b><span class="eyebrow">A revisar</span></div><div class="a"><b>${n("aldia")}</b><span class="eyebrow">Al día</span></div></div>
 
     <form class="panel row" id="f-horas" style="align-items:flex-end">
@@ -689,6 +725,7 @@ function tareaHTML(t, e){
       <p>${esc(t.porque)}</p>${t.notaMarca?`<p class="notice info">${esc(t.notaMarca)}</p>`:""}${cc.primeraHoras?`<p class="muted" style="font-size:.9rem">La primera revisión (a las ${cc.primeraHoras} h) es solo para motores nuevos, 0 horas. En un motor usado, siga el intervalo normal.</p>`:""}
       <div class="row"><span class="chip info">${esc(freq)}</span>${t.segun?`<span class="chip aldia">Según ${esc(t.segun)}</span>`:(t.cada&&!t.cada.usos?`<span class="chip proxima">Intervalo general</span>`:"")}${t.quien==="mecanico"?`<span class="chip mecanico">Tarea de taller</span>`:`<span class="chip simple">La puede hacer usted</span>`}</div>
       <ol>${t.pasos.map(p=>`<li>${esc(p)}</li>`).join("")}</ol>
+      ${spItems().some(i => i.tarea === t.id) ? `<button class="btn sec" data-a="sp-abrir" data-id="${spItems().find(i => i.tarea === t.id).id}" data-ir="1">Ver cómo hacerlo paso a paso</button>` : ""}
       ${t.materiales && t.materiales.length ? `<p><strong>Materiales:</strong> ${t.materiales.map(esc).join(", ")}</p>` : ""}
       ${["vencida","proxima","sinregistro"].includes(e.k) ? `<a class="btn ok" href="${esc(linkWhatsapp(textoTurno([t])))}" target="_blank" rel="noopener" data-ev="turno/${esc(t.id)}">${t.quien==="mecanico" ? "Pedir turno al taller" : "Prefiero que lo haga el taller: pedir turno"}</a>` : ""}
       ${u ? `<p class="muted" style="font-size:.9rem">Último registro: ${esc(fmtFecha(u.fecha))}${u.horas!=null?` a las ${Math.round(u.horas)} h`:""}.</p>` : ""}
@@ -700,6 +737,164 @@ function tareaHTML(t, e){
         </form>` : `<button class="btn sec" data-a="registrar" data-id="${t.id}">Registrar como hecha</button>`}
     </div>` : ""}
   </div>`;
+}
+
+/* ---------- Haga el service usted mismo (Juan, 15/11/2026) ---------- */
+// Guía en service-propio.js. Los datos (aceite, bujía, cantidades, ajustes) salen de la ficha de cada motor (manual de la marca).
+const SP = window.SERVICE_PROPIO || { items:[], repuestos:[], taller:[] };
+const KEY_SP = KEY + "-sp";
+let sp = null; // { id, paso: "aviso" | "intro" | número | "fin" }
+function datoMotor(nombre){ const f = ficha(); if (!f) return null; const d = (f.datosTecnicos||[]).find(x => x.dato === nombre); return d ? d.valor : null; }
+function cilindros(){
+  const dt = (ficha() || {}).datosTecnicos || [];
+  const c = dt.find(x => x.dato === "Cilindros"); if (c){ const m = String(c.valor).match(/^(\d)/); if (m) return +m[1]; }
+  const mo = dt.find(x => x.dato === "Motor"); if (mo){ const m = String(mo.valor).match(/(\d)\s*cilindro/) || String(mo.valor).match(/V(\d)/); if (m) return +m[1]; }
+  return null;
+}
+function spItems(){
+  const ids = new Set(tareas().map(t => t.id));
+  return SP.items.filter(aplica).filter(i => !i.tarea || ids.has(i.tarea)).map(i => Object.assign({}, i, { pasos: i.pasos.filter(aplica) }));
+}
+function spProgreso(){ try { const x = JSON.parse(localStorage.getItem(KEY_SP)); if (x && x.inicio && mesesEntre(x.inicio, hoy()) < 1) return x; } catch(e){} return { inicio: hoy(), hechos: [] }; }
+function spMarcar(id){ const p = spProgreso(); if (!p.hechos.includes(id)) p.hechos.push(id); try { localStorage.setItem(KEY_SP, JSON.stringify(p)); } catch(e){} }
+function motorLinea(){ const m = S.motor || {}; return [m.marca, m.modelo, (m.modelo||"").includes(m.tiempos||"-") ? "" : m.tiempos, m.anio ? "año "+m.anio : ""].filter(Boolean).join(" "); }
+function datosBox(item, compacto){
+  if (!item.datos || !item.datos.length) return "";
+  const filas = item.datos.map(n => [n, datoMotor(n)]).filter(x => x[1]);
+  if (item.id === "bujias"){ const c = cilindros(); if (c) filas.push(["Cantidad", c + (c === 1 ? " bujía" : " bujías")]); }
+  if (!filas.length) return compacto ? "" : `<div class="notice info"><strong>Datos de su motor</strong><span>No están cargados para su motor. Búsquelos en el manual o pregúntele al taller antes de empezar.</span></div>`;
+  return `<div class="panel datos-motor"><span class="eyebrow">Datos de su motor · según el manual de ${esc(S.motor.marca)}</span>
+    <dl>${filas.map(([n,v]) => `<div><dt>${esc(n)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl></div>`;
+}
+const NIVEL_SP = { facil:["simple","Fácil"], medio:["intermedio","Con herramientas"], riesgo:["mecanico","La más arriesgada"] };
+function vServicio(){
+  const items = spItems();
+  if (!sp){
+    const prog = spProgreso(), ts = tareas();
+    const queda = SP.taller.map(id => ts.find(t => t.id === id)).filter(Boolean);
+    return `<div class="stack">
+      <a class="volver" href="#mantenimiento">‹ Service</a>
+      <h1>Haga el service usted mismo</h1>
+      <p class="muted">Guía paso a paso para su ${esc(motorLinea())}. Una cosa por pantalla. Haga las tareas en este orden.</p>
+      ${ficha() ? "" : `<div class="notice info">Su motor todavía no tiene ficha propia: los datos (aceite, bujías, cantidades) búsquelos en el manual o consúltelos al taller.</div>`}
+      <div class="consejo"><i>!</i><span>Si en algún paso tiene dudas, pare y consulte al taller. Es mejor preguntar que romper.</span></div>
+      <div class="sp-lista">${items.map((it, i) => {
+        const hecho = prog.hechos.includes(it.id), t = it.tarea ? ts.find(x => x.id === it.tarea) : null, e = t ? estado(t) : null;
+        const toca = e && ["vencida","proxima","sinregistro"].includes(e.k);
+        const nv = NIVEL_SP[it.nivel] || NIVEL_SP.facil;
+        return `<button class="sp-item ${it.nivel === "riesgo" ? "riesgo" : ""} ${hecho ? "hecho" : ""}" data-a="sp-abrir" data-id="${it.id}">
+          <span class="num">${hecho ? "✓" : i+1}</span>
+          <span class="t"><b>${esc(it.titulo)}</b><small>${esc(it.resumen || "")}</small>
+            <span class="row" style="gap:6px;margin-top:6px"><span class="chip ${nv[0]}">${nv[1]}</span>${toca && !hecho ? `<span class="chip proxima">Le toca</span>` : ""}${it.opcional ? `<span class="chip info">Si corresponde</span>` : ""}</span></span>
+        </button>`; }).join("")}</div>
+      ${queda.length ? `<div class="panel stack"><h3>Esto lo hace el taller</h3>
+        <p class="muted" style="font-size:.95rem">Necesita desarmar partes del motor y herramientas especiales.</p>
+        <ul class="sp-taller">${queda.map(t => `<li><span>${esc(t.nombre)}</span><span class="chip ${estado(t).k}">${nombreEstado[estado(t).k]}</span></li>`).join("")}</ul>
+        <a class="btn ok" href="${esc(linkWhatsapp(textoTurno(queda)))}" target="_blank" rel="noopener" data-ev="turno/service-taller">Pedir turno al taller</a></div>` : ""}
+      <a class="btn sec" href="#repuestos">Comprar los repuestos</a>
+      ${prog.hechos.length ? `<button class="link" data-a="sp-reset">Empezar un service nuevo (borrar las marcas)</button>` : ""}
+    </div>`;
+  }
+  const it = items.find(x => x.id === sp.id); if (!it){ sp = null; return vServicio(); }
+  const n = it.pasos.length;
+  const ladder = `<div class="ladder" aria-label="Paso">${it.pasos.map((p,i)=>`<span class="${typeof sp.paso === "number" ? (i<sp.paso?"done":i===sp.paso?"now":"") : sp.paso === "fin" ? "done" : ""}"></span>`).join("")}</div>`;
+
+  if (sp.paso === "aviso"){
+    const a = it.advertencia;
+    return `<div class="stack">
+      <button class="volver" data-a="sp-lista">‹ Volver</button>
+      <section class="stop"><span class="eyebrow">Atención</span><h1>${esc(a.titulo)}</h1></section>
+      <ol class="pasos-num">${a.texto.map(x => `<li>${esc(x)}</li>`).join("")}</ol>
+      <a class="btn ok big" href="${esc(linkWhatsapp(textoTurno(tareas().filter(t => t.id === "carburador"))))}" target="_blank" rel="noopener" data-ev="turno/carburador-guia">Pedir turno al taller</a>
+      ${TALLER.tel ? `<a class="llamar" href="tel:${esc(TALLER.tel)}"><span><small>${esc(TALLER.nombre)}</small><b>${esc(TALLER.ver || TALLER.tel)}</b></span><span class="accion">Llamar</span></a>` : ""}
+      <button class="btn ghost" data-a="sp-riesgo-ok">Entiendo el riesgo, quiero ver la guía</button>
+    </div>`;
+  }
+  if (sp.paso === "intro"){
+    const t = it.tarea ? tareas().find(x => x.id === it.tarea) : null;
+    const nv = NIVEL_SP[it.nivel] || NIVEL_SP.facil;
+    return `<div class="stack">
+      <button class="volver" data-a="sp-lista">‹ Volver</button>
+      <span class="row" style="gap:6px"><span class="chip ${nv[0]}">${nv[1]}</span><span class="chip info">${n} pasos</span></span>
+      <h1>${esc(it.titulo)}</h1>
+      ${it.opcional ? `<p class="muted">${esc(it.opcional)}</p>` : ""}
+      ${it.nivel === "riesgo" ? `<div class="notice alto"><strong>Recuerde</strong><span>Lo recomendable es que lo haga un mecánico. Si en algún paso duda, pare y llévelo al taller.</span></div>` : ""}
+      ${t && t.notaMarca ? `<p class="notice info">${esc(t.notaMarca)}</p>` : ""}
+      ${datosBox(it)}
+      <div class="panel stack"><h3>Lo que necesita</h3><ul class="sp-mat">${(it.materiales||[]).map(m => `<li>${esc(m)}</li>`).join("")}</ul>
+        <a class="link" href="#repuestos" style="text-align:left;padding:4px 0">Comprar los repuestos</a></div>
+      <button class="btn big" data-a="sp-paso" data-n="0">Empezar</button>
+    </div>`;
+  }
+  if (sp.paso === "fin"){
+    const i = items.findIndex(x => x.id === it.id), sig = items[i+1];
+    const ult = it.tarea ? ultimo(it.tarea) : null, yaReg = ult && ult.fecha === hoy();
+    if (it.id === "prueba") return `<div class="stack">${ladder}
+      <section class="bien"><span class="eyebrow">Listo</span><h1>¡Service terminado!</h1>
+      <p>Revise en la lista que estén todas las tareas marcadas. Si notó algo raro en la prueba, consulte al taller antes de salir a navegar.</p></section>
+      <button class="btn big" data-a="sp-lista">Volver a la lista</button>
+      <a class="btn sec" href="#mantenimiento">Ir a Service</a></div>`;
+    return `<div class="stack">${ladder}
+      <section class="bien"><span class="eyebrow">Tarea terminada</span><h1>${esc(it.titulo)}: listo</h1></section>
+      ${it.tarea ? (yaReg ? `<p class="notice info">Ya quedó anotada en el historial de hoy.</p>`
+        : `<button class="btn ok big" data-a="sp-registrar" data-id="${it.id}">Anotar en el historial (${Math.round(S.horas)} h)</button>`) : ""}
+      ${sig ? `<button class="btn ${it.tarea && !yaReg ? "sec" : "big"}" data-a="sp-abrir" data-id="${sig.id}">Seguir con: ${esc(sig.titulo)}</button>` : ""}
+      <button class="link" data-a="sp-lista">Volver a la lista</button></div>`;
+  }
+  const p = it.pasos[sp.paso], ultimoPaso = sp.paso === n - 1;
+  const conDato = p.como.some(c => /dato/i.test(c));
+  return `<div class="stack paso">
+    <button class="volver" data-a="${sp.paso > 0 ? "sp-paso" : "sp-intro"}" data-n="${sp.paso-1}">‹ ${sp.paso > 0 ? "Paso anterior" : "Volver"}</button>
+    ${ladder}
+    <span class="eyebrow">Paso ${sp.paso+1} de ${n} · ${esc(it.titulo)}</span>
+    <h1>${esc(p.titulo)}</h1>
+    <ol class="pasos-num">${p.como.map(c => `<li>${esc(c)}</li>`).join("")}</ol>
+    ${p.alto ? `<div class="notice alto"><strong>Cuidado</strong><span>${esc(p.alto)}</span></div>` : ""}
+    ${conDato ? datosBox(it, true) : ""}
+    ${p.boton === "repuestos" ? `<a class="btn sec" href="#repuestos">Comprar los repuestos</a>` : ""}
+    <div class="respuestas">
+      ${ultimoPaso ? `<button class="btn ok big" data-a="sp-terminar">Terminé esta tarea</button>` : `<button class="btn big" data-a="sp-paso" data-n="${sp.paso+1}">Listo, siguiente paso</button>`}
+      ${it.nivel === "riesgo" ? `<a class="link" href="${esc(linkWhatsapp(textoTurno(tareas().filter(t => t.id === "carburador"))))}" target="_blank" rel="noopener" data-ev="turno/carburador-paso-${sp.paso+1}">Prefiero que lo haga el taller</a>` : ""}
+    </div>
+  </div>`;
+}
+
+/* ---------- Comprar los repuestos (Juan, 15/11/2026) ---------- */
+// Todavía no hay venta online: el pedido va por WhatsApp al taller. Cada repuesto pedido se cuenta
+// (anónimo) para saber qué conviene tener en stock: "repuesto/<id>/<detalle>".
+let repSel = null;
+function repLista(){
+  const ts = tareas(), ids = new Set(ts.map(t => t.id));
+  return SP.repuestos.filter(aplica).filter(r => !r.tarea || ids.has(r.tarea)).filter(r => !r.si || datoMotor(r.si)).map(r => {
+    let v = (r.datos || []).map(datoMotor).filter(Boolean);
+    if (r.id === "filtro-aceite" && v.length && /malla/i.test(v[0])) return null;
+    if (r.porCilindro && v.length){ const c = cilindros(); v = [v[0] + (c ? " · " + c + (c === 1 ? " unidad" : " unidades") : "")]; }
+    const t = r.tarea ? ts.find(x => x.id === r.tarea) : null, e = t ? estado(t) : null;
+    return { r, det: v.join(" · "), toca: !!(e && ["vencida","proxima"].includes(e.k)) };
+  }).filter(Boolean);
+}
+function vRepuestos(){
+  const lista = repLista();
+  if (!repSel) repSel = new Set(lista.filter(x => x.toca).map(x => x.r.id));
+  return `<div class="stack">
+    <a class="volver" href="#mantenimiento">‹ Service</a>
+    <h1>Comprar los repuestos</h1>
+    <p class="muted">Lista para su ${esc(motorLinea())}, con los datos del manual. Marque lo que necesita y mándenos el pedido por WhatsApp: le confirmamos precio y disponibilidad.</p>
+    ${lista.some(x => x.toca) ? `<p class="muted" style="font-size:.92rem">Ya dejamos marcado lo de las tareas que le tocan.</p>` : ""}
+    <div class="panel rep-lista">${lista.map(x => `<label class="rep">
+      <input type="checkbox" data-rep="${x.r.id}" ${repSel.has(x.r.id) ? "checked" : ""}>
+      <span><b>${esc(x.r.nombre)}</b>${(x.det || x.r.sinDato || x.r.modelo) ? `<small>${esc(x.det || x.r.sinDato || "El taller le confirma el modelo para su motor")}</small>` : ""}${x.r.nota ? `<span class="chip mecanico" style="margin-top:4px">${esc(x.r.nota)}</span>` : ""}</span>
+    </label>`).join("")}</div>
+    <button class="btn ok big" data-a="pedir-repuestos">Pedir por WhatsApp</button>
+    <p class="muted" style="font-size:.88rem">${esc(TALLER.nombre)}. Por ahora no se paga en la app: el taller le responde por WhatsApp.</p>
+  </div>`;
+}
+function textoRepuestos(xs){
+  return `Hola, quiero pedir repuestos para el service de mi motor.
+Motor: ${motorLinea()}
+${xs.map(x => "- " + x.r.nombre + (x.det ? ": " + x.det : "")).join("\n")}
+¿Me confirman precio y disponibilidad?
+(Pedido desde la app Auxilio Fuera de Borda)`;
 }
 
 /* ---------- Vista: mi motor ---------- */
@@ -778,6 +973,29 @@ document.addEventListener("click", ev => {
     try { const s = JSON.parse($("#rest").value); if (!s.motor) throw 0; S = s; save(); toast("Datos restaurados"); render(); }
     catch(e){ toast("El texto no es una copia válida. Pegue el texto completo."); }
   }
+  else if (a === "sp-abrir"){
+    const it = spItems().find(x => x.id === b.dataset.id); if (!it) return;
+    sp = { id: it.id, paso: it.advertencia ? "aviso" : "intro" }; contar("service-propio/" + it.id);
+    if (b.dataset.ir){ history.pushState(null, "", "#service-propio"); }
+    render(); scrollTo(0,0);
+  }
+  else if (a === "sp-lista"){ sp = null; render(); scrollTo(0,0); }
+  else if (a === "sp-intro"){ sp.paso = "intro"; render(); scrollTo(0,0); }
+  else if (a === "sp-riesgo-ok"){ sp.paso = "intro"; contar("service-propio/carburador-acepta-riesgo"); render(); scrollTo(0,0); }
+  else if (a === "sp-paso"){ sp.paso = parseInt(b.dataset.n, 10); render(); scrollTo(0,0); }
+  else if (a === "sp-terminar"){ spMarcar(sp.id); contar("service-propio-fin/" + sp.id); sp.paso = "fin"; render(); scrollTo(0,0); }
+  else if (a === "sp-registrar"){
+    const it = spItems().find(x => x.id === b.dataset.id);
+    if (it && it.tarea){ S.registros.push({ tipo:"tarea", tarea:it.tarea, fecha:hoy(), horas:S.horas, nota:"Lo hizo el dueño con la guía de la app" }); save(); toast("Anotado en el historial"); render(); }
+  }
+  else if (a === "sp-reset"){ try { localStorage.removeItem(KEY_SP); } catch(e){} render(); }
+  else if (a === "pedir-repuestos"){
+    const xs = repLista().filter(x => repSel && repSel.has(x.r.id));
+    if (!xs.length){ toast("Marque al menos un repuesto"); return; }
+    xs.forEach(x => contar("repuesto/" + x.r.id + (x.det ? "/" + x.det : "")));
+    contar("pedido-repuestos/" + xs.length);
+    window.open(linkWhatsapp(textoRepuestos(xs)), "_blank", "noopener");
+  }
   else if (a === "tarea"){ abierta = abierta === b.dataset.id ? null : b.dataset.id; registrando = null; render(); }
   else if (a === "registrar"){ registrando = b.dataset.id; render(); }
   else if (a === "cancelar-reg"){ registrando = null; render(); }
@@ -813,6 +1031,10 @@ document.addEventListener("submit", ev => {
     contar("motor/" + [S.motor.marca, S.motor.modelo, S.motor.modelo.includes(S.motor.tiempos) ? "" : S.motor.tiempos].filter(Boolean).join(" "));
     if (nuevo) location.hash = "inicio"; else render();
   }
+});
+document.addEventListener("change", ev => {
+  const id = ev.target.dataset && ev.target.dataset.rep; if (!id || !repSel) return;
+  if (ev.target.checked) repSel.add(id); else repSel.delete(id);
 });
 document.addEventListener("change", ev => {
   if (ev.target.id !== "m-cat") return;
