@@ -132,7 +132,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Con la batería cargada, intente otra vez."
       },
       {
-        titulo: "Bujías (en tierra)",
+        titulo: "Bujías (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Con el motor frío, saque las bujías con la llave de bujías.",
@@ -211,7 +211,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Si prendió a mano, el problema es eléctrico: llévelo al taller al volver."
       },
       {
-        titulo: "Batería (en tierra)",
+        titulo: "Batería (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Cargue la batería o pruebe con otra.",
@@ -509,7 +509,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Con la manguera firme, anda parejo."
       },
       {
-        titulo: "Bujías (en tierra)",
+        titulo: "Bujías (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Revise que los capuchones de las bujías estén bien puestos.",
@@ -599,7 +599,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         alto: "No afloje mangueras de nafta en este motor: la nafta sale con presión."
       },
       {
-        titulo: "Bujías (en tierra)",
+        titulo: "Bujías (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Cambie las bujías por nuevas (las que dice la ficha de su motor)."
@@ -665,7 +665,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Con nafta limpia, deja de toser."
       },
       {
-        titulo: "Bujías (en tierra)",
+        titulo: "Bujías (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Cambie las bujías por nuevas.",
@@ -773,7 +773,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Con el motor firme, vibra menos."
       },
       {
-        titulo: "Bujías (en tierra)",
+        titulo: "Bujías (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Si vibra más en baja y anda a los saltos, cambie las bujías."
@@ -1071,7 +1071,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Siga el paso siguiente, o llévelo directo al taller."
       },
       {
-        titulo: "Sacar el agua (en tierra)",
+        titulo: "Sacar el agua (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Saque las bujías.",
@@ -1298,7 +1298,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
           "Muchos motores chicos de arranque a piola no cargan batería.",
           "Los que cargan, cargan poco: no alcanza para muchas luces y aparatos."
         ],
-        solucion: "Si su motor no carga, cargue la batería en tierra."
+        solucion: "Si su motor no carga, cargue la batería en tierra firme."
       },
       {
         titulo: "Cables de la batería",
@@ -1318,7 +1318,7 @@ window.DATOS.DIAGNOSTICOS_BASE = [
         solucion: "Sin consumos, deja de descargarse."
       },
       {
-        titulo: "Batería vieja (en tierra)",
+        titulo: "Batería vieja (en tierra firme)",
         nivel: "intermedio",
         como: [
           "Si tiene más de 3 o 4 años, puede estar vencida.",
