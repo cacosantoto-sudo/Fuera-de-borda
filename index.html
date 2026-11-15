@@ -312,6 +312,12 @@ h3{font-weight:700}
 .rep span{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
 .rep small{color:var(--muted);font-size:.93rem}
 a.volver{text-decoration:none;color:var(--ink)}
+.inst-av{display:flex;flex-direction:column;gap:12px;text-align:center;align-items:center}
+.inst-av h2{margin:0}
+.inst-av p{font-size:1.08rem}
+.inst-av-ico{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:var(--ok-soft);color:var(--ok)}
+.inst-av-ico svg{width:34px;height:34px}
+.instalada-ok{margin:0;font-size:.9rem;color:var(--ok);font-weight:600;text-align:center}
 </style>
 
 <div class="app">
@@ -324,6 +330,16 @@ a.volver{text-decoration:none;color:var(--ink)}
 </div>
 <div class="tabs"><nav id="tabs"></nav></div>
 <div class="toast" id="toast" hidden></div>
+<div class="inst-hoja" id="inst-aviso" hidden role="dialog" aria-modal="true" aria-labelledby="inst-av-tit">
+  <div class="caja inst-av">
+    <span class="inst-av-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><path d="M12 19h.01"/><path d="M3 3l18 18"/></svg></span>
+    <h2 id="inst-av-tit">Instálela: funciona sin señal</h2>
+    <p>Una vez instalada en el celular, esta app le permite resolver una emergencia en el agua <b>aunque no tenga señal</b>.</p>
+    <p class="muted">Instálela ahora, en tierra firme, para tenerla lista cuando la necesite.</p>
+    <button class="btn ok big" id="inst-av-si" type="button" style="width:100%">Instalar la app</button>
+    <button class="link" id="inst-av-no" type="button" style="width:100%">Ahora no</button>
+  </div>
+</div>
 <div class="inst-hoja" id="inst-hoja" hidden role="dialog" aria-modal="true" aria-labelledby="inst-tit">
   <div class="caja">
     <h2 id="inst-tit">Instalar en 3 pasos</h2>
@@ -541,6 +557,7 @@ function vInicio(){
       <a href="#motor">Mi motor<small>${Math.round(S.horas)} horas de uso</small></a>
     </div>
     <div class="consejo"><i>!</i><span>Antes de salir: chaleco para todos, remo, ancla y el celular cargado.</span></div>
+    ${modoApp() === "instalada" ? `<p class="instalada-ok">✓ App instalada: funciona aunque no tenga señal</p>` : ""}
   </div>`;
 }
 
@@ -1109,6 +1126,14 @@ try { if ("serviceWorker" in navigator && location.protocol === "https:") naviga
   hoja.addEventListener("click", function(e){ if (e.target === hoja) hoja.hidden = true; });
   /* iPhone nunca avisa: se muestra siempre. Android: si en 3 s Chrome no ofreció instalar (otro navegador), se muestra con los pasos. */
   if (ios) mostrar(); else if (android) setTimeout(function(){ mostrar(); }, 3000);
+  /* Juan (15/11/2026): al abrir la app sin instalar, recordar que instalada funciona sin señal. Si toca "Ahora no", vuelve a aparecer al día siguiente. */
+  var KEY_AV = "fdb-aviso-sin-senal", av = document.getElementById("inst-aviso");
+  var hoyAv = new Date().toISOString().slice(0,10);
+  if ((ios || android) && leer(KEY_AV) !== hoyAv) setTimeout(function(){ if (hoja.hidden) av.hidden = false; }, 900);
+  document.getElementById("inst-av-si").addEventListener("click", function(){ av.hidden = true; document.getElementById("inst-si").click(); });
+  document.getElementById("inst-av-no").addEventListener("click", function(){ av.hidden = true; guardar(KEY_AV, hoyAv); });
+  av.addEventListener("click", function(e){ if (e.target === av) { av.hidden = true; guardar(KEY_AV, hoyAv); } });
+  window.addEventListener("appinstalled", function(){ av.hidden = true; });
 })();
 </script>
 
