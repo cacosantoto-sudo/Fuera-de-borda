@@ -785,7 +785,7 @@ function vMant(){
       <p class="muted" style="font-size:.92rem">${pend.length === 1 ? "Hay 1 tarea vencida o próxima" : "Hay "+pend.length+" tareas vencidas o próximas"}. Pida turno y llévelo al taller antes de la próxima salida.</p>
       ${aTurno(pend, "turno/todo", "Pedir turno por WhatsApp")}</div>` : ""; })()}
     <div class="sp-entrada">
-      ${spVisible() ? `<a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>${spBloqueado() ? "Guía paso a paso para su motor · " + pesos(CB.servicePropio.precio) : "Guía paso a paso para su motor"}</small></a>` : ""}
+      ${spVisible() ? `<a class="sp-btn" href="#service-propio"><b>Haga el service usted mismo</b><small>${spBloqueado() ? "Guía paso a paso para su motor · " + precioSP() : "Guía paso a paso para su motor"}</small></a>` : ""}
       ${(() => { const t = taller(); return t && t.repuestos === false ? "" : `<a class="sp-btn sec" href="#repuestos"><b>${repuestosAlTaller() ? "Comprar los repuestos" : "Lista de repuestos"}</b><small>La lista de lo que lleva su motor</small></a>`; })()}
       <a class="sp-btn sec" href="#cargar-service"><b>Me lo hizo el taller</b><small>Anote el service en 3 toques</small></a>
     </div>
@@ -884,6 +884,7 @@ function spPagado(){
 }
 function spBloqueado(){ return !!(CB.servicePropio && (CB.servicePropio.activo || modoPrueba())) && !spPagado(); }
 const pesos = n => "$" + Number(n).toLocaleString("es-AR");
+const precioSP = () => "US$ " + Number(CB.servicePropio.usd).toLocaleString("es-AR"); // Juan (16/11/2026): solo en dólares
 // Juan (15/11/2026): sin la guía paga, cada tarea muestra solo qué hay que hacer. Cómo se hace, herramientas
 // y materiales se ven borrosos. El texto borroso es de relleno: el contenido real no llega a la pantalla.
 const RELLENO = ["Afloje con cuidado y revise que no quede nada suelto antes de seguir.", "Use la herramienta justa y apriete sin forzar la rosca.", "Limpie la zona, mire el estado de la pieza y cambie lo que esté gastado.", "Ponga la cantidad que indica el manual y verifique el nivel al final.", "Vuelva a armar en el orden inverso y pruebe el motor con agua."];
@@ -900,7 +901,7 @@ function tareaBloqueada(t){
 function vComprar(){
   const c = CB.servicePropio, ped = numeroPedido(), ws = c.whatsapp || (TT.contacto || {}).whatsapp || "";
   const nombres = spItems().filter(i => i.tarea).map(i => i.titulo).filter(Boolean);
-  const txtCompra = `Hola, quiero comprar la guía "Haga el service usted mismo" de la app Auxilio Fuera de Borda.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}\nPrecio: ${pesos(c.precio)}. ¿Cómo hago el pago?`;
+  const txtCompra = `Hola, quiero comprar la guía "Haga el service usted mismo" de la app Auxilio Fuera de Borda.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}\nPrecio: ${precioSP()}. ¿Cómo hago el pago?`;
   const txtComprobante = `Hola, ya pagué la guía "Haga el service usted mismo". Le mando el comprobante.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}`;
   return `<div class="stack">
     <a class="volver" href="#mantenimiento">‹ Service</a>
@@ -917,7 +918,7 @@ function vComprar(){
         <li>Cada tarea terminada queda anotada sola en su historial de service.</li>
         <li>Funciona sin señal: úsela en la guardería, en la casa o en la orilla.</li>
       </ul></div>
-    <div class="precio-card"><small>Pago único, para su motor</small><b>${pesos(c.precio)}</b>${c.usd ? `<span>Unos US$ ${esc(c.usd)}</span>` : ""}</div>
+    <div class="precio-card"><small>Pago único, para su motor</small><b>${precioSP()}</b></div>
     ${c.linkPago
       ? `<a class="btn ok big" href="${esc(c.linkPago)}" target="_blank" rel="noopener" data-ev="compra/sp/mercadopago">Pagar con Mercado Pago</a>`
       : `<a class="btn ok big" href="${esc(waLink(ws, txtCompra))}" target="_blank" rel="noopener" data-ev="compra/sp/whatsapp">Comprar por WhatsApp</a>`}

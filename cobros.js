@@ -12,8 +12,8 @@
 window.COBROS = {
   servicePropio: {
     activo: false,                 // false = la guía sigue gratis. true = se cobra.
-    precio: 150000,                // en pesos
-    usd: 99,                       // referencia en dólares
+    usd: 99,                       // precio que se muestra (Juan, 16/11/2026: solo en dólares)
+    precio: 150000,                // referencia en pesos (no se muestra)
     linkPago: "",                  // link de pago de Mercado Pago con monto fijo. Vacío = se coordina por WhatsApp.
     whatsapp: "5493425217781",     // a dónde llegan los comprobantes
     // MODO PRUEBA (Juan, 15/11/2026): con el cobro apagado, quien abre la app con el link
