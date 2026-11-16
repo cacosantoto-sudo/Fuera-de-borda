@@ -598,7 +598,19 @@ const ICON = {
 const RUTAS = ["inicio","diagnostico","ayuda","mantenimiento","motor","service-propio","repuestos","cargar-service","talleres","para-talleres","acerca"];
 const SIN_MOTOR = ["talleres","para-talleres","acerca"];
 function ruta(){ const h = (location.hash||"").slice(1); if (!S.motor) return SIN_MOTOR.includes(h) ? h : "motor"; if (h === "service-propio" && !spVisible()) return "mantenimiento"; return RUTAS.includes(h) ? h : "inicio"; }
+// Juan (16/11/2026): empezar de cero, como la primera vez. Link: ?nuevo=1 (pide confirmación) o botón en Mi motor.
+let pedirReinicio = (() => { try { return new URLSearchParams(location.search).get("nuevo") === "1"; } catch(e){ return false; } })();
+function vReinicio(){
+  return `<div class="stack">
+    <h1>Empezar de cero</h1>
+    <p>Se borran de este celular el motor configurado, las horas, el historial de service y el taller elegido. La app queda como la primera vez que se abre.</p>
+    <div class="notice alto"><strong>No se puede deshacer</strong><span>Si quiere guardar el historial, antes copie sus datos desde Mi motor.</span></div>
+    <button class="btn sos big" data-a="reiniciar">Borrar todo y empezar</button>
+    <button class="btn ghost" data-a="cancelar-reinicio">Cancelar</button>
+  </div>`;
+}
 function render(){
+  if (pedirReinicio){ $("#tabs").innerHTML = ""; $("#top").innerHTML = `<span class="motor"><small>Auxilio Fuera de Borda</small><b>Empezar de cero</b></span>`; $("#view").innerHTML = vReinicio(); return; }
   const r = ruta();
   const p = S.motor ? pendientes() : 0;
   const pestana = (r === "diagnostico" || r === "ayuda" || r === "talleres") ? "inicio" : (r === "para-talleres" || r === "acerca") ? "motor" : (r === "service-propio" || r === "repuestos" || r === "cargar-service") ? "mantenimiento" : r;
@@ -1154,6 +1166,7 @@ function vMotor(){
     ${!nuevo ? `<div class="panel stack"><h3>Estadísticas anónimas</h3>
       <p class="muted" style="font-size:.92rem">Para mejorar la app contamos, sin datos personales, qué motores y qué fallas se consultan. No se envía su nombre, su teléfono, su ubicación ni su historial.</p>
       <label class="row" style="font-weight:600"><input type="checkbox" id="est-ok" style="width:24px;height:24px" ${estPermitidas() ? "checked" : ""}> Ayudar a mejorar la app</label></div>` : ""}
+    ${!nuevo ? `<button class="link" data-a="pedir-reinicio">Empezar de cero (borrar mi motor e historial)</button>` : ""}
     <p class="muted pie">Ante la duda, consulte a un mecánico.<br><a href="#acerca">Acerca de la app, términos y privacidad</a> · <a href="#para-talleres">¿Tiene un taller?</a></p>
   </div>`;
 }
@@ -1303,6 +1316,16 @@ document.addEventListener("click", ev => {
     if (S.compras && S.compras.sp === CB.servicePropio.codigoPrueba){ delete S.compras.sp; save(); }
     try { const q = new URLSearchParams(location.search); q.delete("prueba"); const qs = q.toString(); history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash); } catch(e){}
     toast("Salió del modo prueba"); location.hash = "mantenimiento"; render();
+  }
+  else if (a === "pedir-reinicio"){ pedirReinicio = true; render(); scrollTo(0,0); }
+  else if (a === "cancelar-reinicio"){
+    pedirReinicio = false;
+    try { const q = new URLSearchParams(location.search); q.delete("nuevo"); const qs = q.toString(); history.replaceState(null, "", location.pathname + (qs ? "?" + qs : "") + location.hash); } catch(e){}
+    render();
+  }
+  else if (a === "reiniciar"){
+    try { Object.keys(localStorage).filter(k => k.startsWith("fdb-")).forEach(k => localStorage.removeItem(k)); } catch(e){}
+    location.replace(location.pathname);
   }
   else if (a === "tarea"){ abierta = abierta === b.dataset.id ? null : b.dataset.id; registrando = null; render(); }
   else if (a === "registrar"){ registrando = b.dataset.id; render(); }
