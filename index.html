@@ -876,7 +876,7 @@ function numeroPedido(){
 }
 const KEY_PRUEBA = KEY + "-prueba";
 (function(){ try { const q = new URLSearchParams(location.search).get("prueba"); if (q === "1") localStorage.setItem(KEY_PRUEBA, "si"); else if (q === "0") localStorage.removeItem(KEY_PRUEBA); } catch(e){} })();
-function modoPrueba(){ try { return !!(CB.servicePropio && CB.servicePropio.codigoPrueba) && localStorage.getItem(KEY_PRUEBA) === "si"; } catch(e){ return false; } }
+function modoPrueba(){ if (CB.pruebaParaTodos && CB.servicePropio && CB.servicePropio.codigoPrueba) return true; try { return !!(CB.servicePropio && CB.servicePropio.codigoPrueba) && localStorage.getItem(KEY_PRUEBA) === "si"; } catch(e){ return false; } }
 function spPagado(){
   const t = taller(); if (t && t.guiaIncluida) return true;
   const c = S.compras && S.compras.sp; if (!c) return false;
@@ -906,7 +906,7 @@ function vComprar(){
   const txtComprobante = `Hola, ya pagué la guía "Haga el service usted mismo". Le mando el comprobante.\nMotor: ${motorLinea()}\nNúmero de pedido: ${ped}`;
   return `<div class="stack">
     <a class="volver" href="#mantenimiento">‹ Service</a>
-    ${modoPrueba() ? `<div class="notice info"><strong>Modo prueba</strong><span>No pague nada. Para activar la guía, use el código <b>${esc(CB.servicePropio.codigoPrueba)}</b>.</span><button class="link" data-a="salir-prueba" style="text-align:left;padding:6px 0 0">Salir del modo prueba</button></div>` : ""}
+    ${modoPrueba() ? `<div class="notice info"><strong>Modo prueba</strong><span>${CB.pruebaParaTodos ? "La app está en prueba: no se cobra nada. Para activar la guía, use el código de prueba que le dieron." : `No pague nada. Para activar la guía, use el código <b>${esc(CB.servicePropio.codigoPrueba)}</b>.`}</span>${CB.pruebaParaTodos ? "" : `<button class="link" data-a="salir-prueba" style="text-align:left;padding:6px 0 0">Salir del modo prueba</button>`}</div>` : ""}
     <span class="eyebrow">Haga el service usted mismo</span>
     <h1>Por lo que cuesta un service, aprenda a hacerlo usted</h1>
     <p>Por aproximadamente el costo de un service de taller, se lleva la guía completa para su ${esc(motorLinea())}: todo lo que necesita saber para hacerlo con sus propias manos, esta vez y todas las que vengan.</p>

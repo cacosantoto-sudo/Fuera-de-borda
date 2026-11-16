@@ -10,6 +10,9 @@
    Para prender o apagar el cobro: activo true / false.
    ===================================================================== */
 window.COBROS = {
+  // Juan (16/11/2026): una sola versión de prueba para todos. true = todos ven los bloqueos, la pantalla de compra
+  // y los precios de talleres, pero nadie paga: la guía se activa con el código de prueba (PRUEBA).
+  pruebaParaTodos: true,
   servicePropio: {
     activo: false,                 // false = la guía sigue gratis. true = se cobra.
     usd: 99,                       // precio que se muestra (Juan, 16/11/2026: solo en dólares)
