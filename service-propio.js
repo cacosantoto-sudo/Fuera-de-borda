@@ -374,32 +374,7 @@ window.SERVICE_PROPIO = {
   /* Lo que queda siempre para el taller (se muestra al final de la guía). */
   taller: ["impulsor", "termostato", "valvulas"],
 
-  /* -------------------------------------------------------------------
-     COMPRAR LOS REPUESTOS: lista armada para cada motor.
-     "datos": de qué datos de la ficha (manual) sale el detalle.
-     "porCilindro": la cantidad es una por cilindro.
-     "si": solo aparece si el motor tiene ese dato.
-     "modelo": cambia según el motor; si no hay dato, el taller confirma el código.
-     ------------------------------------------------------------------- */
-  repuestos: [
-    { id: "aceite-motor", nombre: "Aceite de motor 4T", tiempos: "4T", datos: ["Aceite de motor", "Cantidad de aceite"], tarea: "aceite-motor" },
-    { id: "filtro-aceite", nombre: "Filtro de aceite", tiempos: "4T", datos: ["Filtro de aceite"], tarea: "aceite-motor", sinDato: "Si su motor lleva filtro, el taller le confirma el modelo" },
-    { id: "arandela-carter", nombre: "Arandela del tornillo de drenaje del motor", tiempos: "4T", tarea: "aceite-motor" },
-    { id: "aceite-cola", nombre: "Aceite de cola", datos: ["Aceite de cola"], tarea: "aceite-cola" },
-    { id: "arandelas-cola", nombre: "Arandelas de los tapones de cola (2)", tarea: "aceite-cola" },
-    { id: "bujias", nombre: "Bujías", datos: ["Bujía NGK", "Bujía"], porCilindro: true, tarea: "bujias" },
-    { id: "aceite-2t", nombre: "Aceite 2T para la mezcla o el tanque de aceite", tiempos: "2T", datos: ["Aceite 2T"] },
-    { id: "filtro-nafta", nombre: "Filtro de nafta", modelo: true, tarea: "filtro-combustible" },
-    { id: "chaveta", nombre: "Chaveta (pasador) de hélice", modelo: true, tarea: "helice" },
-    { id: "anodos", nombre: "Ánodos", modelo: true, tarea: "anodos" },
-    { id: "grasa", nombre: "Grasa náutica resistente al agua", datos: ["Grasa"], tarea: "engrase" },
-    { id: "kit-carburador", nombre: "Kit de juntas de carburador", modelo: true, alimentacion: "carburador", tarea: "carburador" },
-    { id: "limpia-carburador", nombre: "Limpiador de carburador en aerosol", alimentacion: "carburador", tarea: "carburador" },
-    { id: "kit-impulsor", nombre: "Kit de bomba de agua (impulsor)", modelo: true, tarea: "impulsor", nota: "Lo coloca el taller" },
-    { id: "termostato", nombre: "Termostato y junta", modelo: true, tarea: "termostato", nota: "Lo coloca el taller" },
-    { id: "fluido-trim", nombre: "Fluido del trim", datos: ["Fluido del trim (PTT)"], si: "Fluido del trim (PTT)" },
-    { id: "estabilizador", nombre: "Estabilizador de nafta", tarea: "invernaje" },
-    { id: "fogging", nombre: "Aceite de empañado (fogging) para guardar el motor", tarea: "invernaje" },
-    { id: "orejeras", nombre: "Orejeras de enjuague" }
-  ]
+  /* COMPRAR LOS REPUESTOS: desde el 16/11/2026 la lista completa (repuestos, insumos,
+     herramientas y limpieza) está en repuestos.js. */
+  repuestos: []
 };

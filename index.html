@@ -384,6 +384,7 @@ a.volver{text-decoration:none;color:var(--ink)}
 <script src="talleres.js"></script>
 <script src="cobros.js"></script>
 <script src="service-propio.js"></script>
+<script src="repuestos.js"></script>
 <script>
 (function(){
 "use strict";
@@ -1044,34 +1045,38 @@ function vServicio(){
 // Todavía no hay venta online: el pedido va por WhatsApp al taller. Cada repuesto pedido se cuenta
 // (anónimo) para saber qué conviene tener en stock: "repuesto/<id>/<detalle>".
 let repSel = null;
+// Lista completa (Juan, 16/11/2026): repuestos, aceites e insumos, herramientas y limpieza que nombra cada tarea del service.
+// El catálogo está en repuestos.js (el mismo que arma la planilla listados/repuestos-y-herramientas-por-motor.xlsx).
 function repLista(){
-  const ts = tareas(), ids = new Set(ts.map(t => t.id));
-  return SP.repuestos.filter(aplica).filter(r => !r.tarea || ids.has(r.tarea)).filter(r => !r.si || datoMotor(r.si)).map(r => {
-    let v = (r.datos || []).map(datoMotor).filter(Boolean);
-    if (r.id === "filtro-aceite" && v.length && /malla/i.test(v[0])) return null;
-    if (r.porCilindro && v.length){ const c = cilindros(); v = [v[0] + (c ? " · " + c + (c === 1 ? " unidad" : " unidades") : "")]; }
-    const t = r.tarea ? ts.find(x => x.id === r.tarea) : null, e = t ? estado(t) : null;
-    return { r, det: v.join(" · "), toca: !!(e && ["vencida","proxima"].includes(e.k)) };
-  }).filter(Boolean);
+  const RP = window.REPUESTOS; if (!RP) return [];
+  const ts = tareas(), ids = new Set(ts.map(t => t.id)), f = ficha() || {};
+  const m = Object.assign({ id:"", potencia: +(S.motor.potencia||0) }, f, { tiempos: S.motor.tiempos, alimentacion: S.motor.alimentacion });
+  const ctx = { tiene: id => ids.has(id), dato: datoMotor, nota: id => { const t = ts.find(x => x.id === id); return (t && t.notaMarca) || ""; }, cilindros: cilindros() };
+  return RP.lista(m, ctx).map(x => {
+    const r = x.item, enT = r.en.filter(id => ids.has(id));
+    const toca = (r.grupo === "repuesto" || r.grupo === "insumo") && !r.taller && enT.some(id => { const e = estado(ts.find(t => t.id === id)); return ["vencida","proxima"].includes(e.k); });
+    return { r, det: x.detalle, toca };
+  });
 }
 function vRepuestos(){
-  const lista = repLista();
+  const lista = repLista(), RP = window.REPUESTOS || { grupos: [] };
   if (!repSel) repSel = new Set(lista.filter(x => x.toca).map(x => x.r.id));
+  const fila = x => `<label class="rep">
+      <input type="checkbox" data-rep="${x.r.id}" ${repSel.has(x.r.id) ? "checked" : ""}>
+      <span><b>${esc(x.r.nombre)}</b>${x.det ? `<small>${esc(x.det)}</small>` : (x.r.grupo === "repuesto" ? `<small>El taller le confirma el modelo para su motor</small>` : "")}${x.r.taller ? `<span class="chip mecanico" style="margin-top:4px">Lo coloca el taller</span>` : ""}</span>
+    </label>`;
   return `<div class="stack">
     <a class="volver" href="#mantenimiento">‹ Service</a>
     <h1>${repuestosAlTaller() ? "Comprar los repuestos" : "Lista de repuestos"}</h1>
-    <p class="muted">Lista para su ${esc(motorLinea())}, con los datos del manual. ${repuestosAlTaller() ? "Marque lo que necesita y mándele el pedido a " + esc(taller().nombre) + " por WhatsApp: le confirman precio y disponibilidad." : "Marque lo que necesita y mande la lista por WhatsApp a su mecánico o a la casa de repuestos."}</p>
+    <p class="muted">Todo lo que lleva el service de su ${esc(motorLinea())}: repuestos, aceites, herramientas y elementos de limpieza, con los datos del manual. ${repuestosAlTaller() ? "Marque lo que necesita y mándele el pedido a " + esc(taller().nombre) + " por WhatsApp: le confirman precio y disponibilidad." : "Marque lo que necesita y mande la lista por WhatsApp a su mecánico o a la casa de repuestos."}</p>
     ${lista.some(x => x.toca) ? `<p class="muted" style="font-size:.92rem">Ya dejamos marcado lo de las tareas que le tocan.</p>` : ""}
-    <div class="panel rep-lista">${lista.map(x => `<label class="rep">
-      <input type="checkbox" data-rep="${x.r.id}" ${repSel.has(x.r.id) ? "checked" : ""}>
-      <span><b>${esc(x.r.nombre)}</b>${(x.det || x.r.sinDato || x.r.modelo) ? `<small>${esc(x.det || x.r.sinDato || "El taller le confirma el modelo para su motor")}</small>` : ""}${x.r.nota ? `<span class="chip mecanico" style="margin-top:4px">${esc(x.r.nota)}</span>` : ""}</span>
-    </label>`).join("")}</div>
+    ${RP.grupos.map(g => { const xs = lista.filter(x => x.r.grupo === g.id); return xs.length ? `<h2 style="font-size:1.15rem;margin-top:6px">${esc(g.nombre)}</h2><div class="panel rep-lista">${xs.map(fila).join("")}</div>` : ""; }).join("")}
     <button class="btn ok big" data-a="pedir-repuestos">${repuestosAlTaller() ? "Pedir por WhatsApp" : "Mandar la lista por WhatsApp"}</button>
     <p class="muted" style="font-size:.88rem">${repuestosAlTaller() ? esc(taller().nombre) + ". Por ahora no se paga en la app: el taller le responde por WhatsApp." : "WhatsApp se abre para que elija a quién mandársela."}</p>
   </div>`;
 }
 function textoRepuestos(xs){
-  return `Hola, quiero pedir repuestos para el service de mi motor.
+  return `Hola, quiero pedir repuestos y herramientas para el service de mi motor.
 Motor: ${motorLinea()}
 ${xs.map(x => "- " + x.r.nombre + (x.det ? ": " + x.det : "")).join("\n")}
 ¿Me confirman precio y disponibilidad?
